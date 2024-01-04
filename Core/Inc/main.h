@@ -84,10 +84,9 @@ void Error_Handler(void);
 #define BUS0_spi1_mosi_GPIO_Port GPIOA
 #define BUS0_bit4_Pin GPIO_PIN_4
 #define BUS0_bit4_GPIO_Port GPIOC
-#define BUS0_bit5_Pin GPIO_PIN_5
-#define BUS0_bit5_GPIO_Port GPIOC
-#define BUS0_i2c2_scl_Pin GPIO_PIN_10
-#define BUS0_i2c2_scl_GPIO_Port GPIOB
+#define nESTOP_Pin GPIO_PIN_5
+#define nESTOP_GPIO_Port GPIOC
+#define nESTOP_EXTI_IRQn EXTI9_5_IRQn
 #define BUS0_cs0_Pin GPIO_PIN_12
 #define BUS0_cs0_GPIO_Port GPIOB
 #define BUS0_cs1_Pin GPIO_PIN_13
@@ -96,14 +95,14 @@ void Error_Handler(void);
 #define BUS0_cs2_GPIO_Port GPIOB
 #define BUS0_cs3_Pin GPIO_PIN_15
 #define BUS0_cs3_GPIO_Port GPIOB
-#define BUS0_bit6_Pin GPIO_PIN_6
-#define BUS0_bit6_GPIO_Port GPIOC
+#define READY_Pin GPIO_PIN_6
+#define READY_GPIO_Port GPIOC
+#define READY_EXTI_IRQn EXTI9_5_IRQn
 #define BUS0_bit7_Pin GPIO_PIN_7
 #define BUS0_bit7_GPIO_Port GPIOC
-#define BUS0_bit8_Pin GPIO_PIN_8
-#define BUS0_bit8_GPIO_Port GPIOC
-#define BUS0_bit9_Pin GPIO_PIN_9
-#define BUS0_bit9_GPIO_Port GPIOC
+#define nINTERRUPT_Pin GPIO_PIN_9
+#define nINTERRUPT_GPIO_Port GPIOC
+#define nINTERRUPT_EXTI_IRQn EXTI9_5_IRQn
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
@@ -112,20 +111,12 @@ void Error_Handler(void);
 #define BUS0_uart3_tx_GPIO_Port GPIOC
 #define BUS0_uart3_rx_Pin GPIO_PIN_11
 #define BUS0_uart3_rx_GPIO_Port GPIOC
-#define BUS0_i2c2_sda_Pin GPIO_PIN_12
-#define BUS0_i2c2_sda_GPIO_Port GPIOC
 #define BUS0_spi1_ck_Pin GPIO_PIN_3
 #define BUS0_spi1_ck_GPIO_Port GPIOB
-#define SW_TRIGGER_Pin GPIO_PIN_4
-#define SW_TRIGGER_GPIO_Port GPIOB
 #define BUS0_timch1_Pin GPIO_PIN_6
 #define BUS0_timch1_GPIO_Port GPIOB
 #define BUS0_timch2_Pin GPIO_PIN_7
 #define BUS0_timch2_GPIO_Port GPIOB
-#define BUS0_timch3_Pin GPIO_PIN_8
-#define BUS0_timch3_GPIO_Port GPIOB
-#define BUS0_timch4_Pin GPIO_PIN_9
-#define BUS0_timch4_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
