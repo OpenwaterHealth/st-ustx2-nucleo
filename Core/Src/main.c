@@ -522,6 +522,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(nRST_SLV_GPIO_Port, nRST_SLV_Pin, GPIO_PIN_SET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -529,9 +532,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BUS0_bit0_Pin BUS0_bit1_Pin BUS0_bit2_Pin BUS0_bit3_Pin
-                           BUS0_bit4_Pin BUS0_bit7_Pin */
+                           BUS0_bit7_Pin */
   GPIO_InitStruct.Pin = BUS0_bit0_Pin|BUS0_bit1_Pin|BUS0_bit2_Pin|BUS0_bit3_Pin
-                          |BUS0_bit4_Pin|BUS0_bit7_Pin;
+                          |BUS0_bit7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -548,6 +551,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : nRST_SLV_Pin */
+  GPIO_InitStruct.Pin = nRST_SLV_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(nRST_SLV_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : nESTOP_Pin READY_Pin nINTERRUPT_Pin */
   GPIO_InitStruct.Pin = nESTOP_Pin|READY_Pin|nINTERRUPT_Pin;

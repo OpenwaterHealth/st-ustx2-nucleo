@@ -82,8 +82,8 @@ void Error_Handler(void);
 #define BUS0_spi1_miso_GPIO_Port GPIOA
 #define BUS0_spi1_mosi_Pin GPIO_PIN_7
 #define BUS0_spi1_mosi_GPIO_Port GPIOA
-#define BUS0_bit4_Pin GPIO_PIN_4
-#define BUS0_bit4_GPIO_Port GPIOC
+#define nRST_SLV_Pin GPIO_PIN_4
+#define nRST_SLV_GPIO_Port GPIOC
 #define nESTOP_Pin GPIO_PIN_5
 #define nESTOP_GPIO_Port GPIOC
 #define nESTOP_EXTI_IRQn EXTI9_5_IRQn
