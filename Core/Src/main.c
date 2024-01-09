@@ -35,7 +35,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-// #define RUN_TESTS
 
 /* USER CODE END PD */
 
@@ -68,7 +67,8 @@ const osThreadAttr_t defaultTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
-
+uint8_t found_addresses[MAX_FOUND_ADDRESSES];
+uint8_t found_address_count = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -122,6 +122,12 @@ PUTCHAR_PROTOTYPE
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+static void PrintI2CSpeed(I2C_HandleTypeDef* hi2c) {
+    uint32_t timing = hi2c->Init.ClockSpeed;
+    printf("I2C Speed: %ld kHz\r\n\r\n", timing/1000); // Print the I2C speed in kHz
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -164,17 +170,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf("\033c");
   printf("Openwater USTX2 Test FW v1.0.0\r\n\r\n");
+  printf("CPU Clock Frequency: %lu MHz\r\n", HAL_RCC_GetSysClockFreq() / 1000000);
+  PrintI2CSpeed(&hi2c1);
 
-
-#ifdef RUN_TESTS
-  if(crc_test()==1){
-	  printf("CRC Test Failed\r\n\r\n");
-  }
-  else
-  {
-	  printf("CRC Test Passed\r\n\r\n");
-  }
-#endif
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -717,7 +715,6 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
     osDelay(500);
-    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
   }
   /* USER CODE END 5 */
 }
@@ -751,6 +748,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+  printf("===> ERROR HANDLER\r\n");
   __disable_irq();
   while (1)
   {

@@ -7,6 +7,8 @@
 
 #include "commands.h"
 #include "i2c_func.h"
+#include "i2c_protocol.h"
+
 #include <stdio.h>
 
 
@@ -14,10 +16,11 @@ void print_main_menu(uint8_t slave_address)
 {
     // Print the menu
     printf("\r\nMain Menu (Selected Slave: 0x%02X):\r\n\r\n", slave_address);
-    printf("1. Test I2C\r\n");
-    printf("2. Toggle LED\r\n");
+    printf("1. Toggle Master\r\n");
+    printf("2. Toggle Slave LED\r\n");
 
-    printf("\r\ns. Select Slave (rescans)\r\n");
+    printf("\r\ns. Scan I2C Bus\r\n");
+    printf("\r\nn. Select Next Slave\r\n");
     printf("?. This Menu\r\n");
 }
 
@@ -37,18 +40,28 @@ void process_command(char* input, uint8_t selected_slave){
         case '1':
             // Perform Test I2C functionality
             // You should implement the I2C test functionality here
-            printf("Testing I2C...\r\n");
+            printf("Toggling Master LED...\r\n");
+            HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
             break;
 
         case '2':
             // Toggle LED
-            printf("Toggling LED...\r\n");
+            printf("Toggling Slave 0x%02X LED...\r\n", selected_slave);
+
+            SendI2CPacket(selected_slave, CMD_TOGGLE_LED);
             break;
 
         case 's':
             // Select Slave
-            printf("Select Slave...\r\n");
+            printf("Scan I2C Bus...\r\n");
             I2C_scan();
+            break;
+
+        case 'n':
+            // Select Slave
+            printf("Select Next Slave Total # %d CURRENT: 0x%02X ", found_address_count, selected_slave);
+            I2C_set_next_slave();
+            printf("NEW: 0x%02X\r\n", I2C_get_selected_slave());
             break;
 
         case '?':

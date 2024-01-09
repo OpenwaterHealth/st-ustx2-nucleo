@@ -24,7 +24,12 @@ TaskHandle_t xCommsTask = NULL;
 // This is the FreeRTOS task
 static void UART_Task(void *argument) {
     char userInput;
-    uint8_t slave_addr = I2C_scan();
+    uint8_t slave_addr = 0xff;
+
+    I2C_scan();
+    if(found_address_count>0){
+    	I2C_set_selected_slave(found_addresses[0]);
+    }
 	HAL_UART_AbortReceive(&huart2);
 
 	print_main_menu(slave_addr);

@@ -55,6 +55,10 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+#define MAX_FOUND_ADDRESSES 10 // Maximum number of found addresses
+
+extern uint8_t found_addresses[]; // Global array to store found addresses
+extern uint8_t found_address_count; // Counter for found addresses
 
 /* USER CODE END EFP */
 
@@ -119,6 +123,7 @@ void Error_Handler(void);
 #define BUS0_timch2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+// #define DEBUG_COMMS
 
 /* USER CODE END Private defines */
 
