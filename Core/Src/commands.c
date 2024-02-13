@@ -5,11 +5,13 @@
  *      Author: gvigelet
  */
 
+#include "main.h"
 #include "commands.h"
 #include "i2c_func.h"
 #include "i2c_protocol.h"
 
 #include <stdio.h>
+#include <string.h>
 
 
 void print_main_menu(uint8_t slave_address)
@@ -20,6 +22,7 @@ void print_main_menu(uint8_t slave_address)
     printf("2. Toggle Slave LED\r\n");
 
     printf("\r\ns. Scan I2C Bus\r\n");
+    printf("t. Toggle Trigger\r\n");
     printf("\r\nn. Select Next Slave\r\n");
     printf("?. This Menu\r\n");
 }
@@ -27,6 +30,31 @@ void print_main_menu(uint8_t slave_address)
 void print_prompt(){
     printf("\r\nChoice: ");
     fflush(stdout);
+}
+
+static bool bTrigger = false;
+static void Toggle_Trigger(){
+
+	if(!bTrigger)
+	{
+		if (HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3) != HAL_OK)
+		{
+			printf("Error toggling trigger mode, current mode: %s\r\n", bTrigger?"ON":"OFF" );
+		}else{
+			bTrigger = true;
+			printf("Trigger mode: %s\r\n", bTrigger?"ON":"OFF" );
+		}
+	}else{
+		if (HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3) != HAL_OK)
+		{
+			printf("Error toggling trigger mode, current mode: %s\r\n", bTrigger?"ON":"OFF" );
+		}else{
+			bTrigger = false;
+			printf("Trigger mode: %s\r\n", bTrigger?"ON":"OFF" );
+		}
+
+	}
+
 }
 
 void process_command(char* input, uint8_t selected_slave){
@@ -55,6 +83,12 @@ void process_command(char* input, uint8_t selected_slave){
             // Select Slave
             printf("Scan I2C Bus...\r\n");
             I2C_scan();
+            break;
+
+        case 't':
+            // Select Slave
+            printf("Toggle Trigger\r\n");
+            Toggle_Trigger();
             break;
 
         case 'n':
