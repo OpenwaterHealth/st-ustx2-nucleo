@@ -20,6 +20,7 @@ void print_main_menu(uint8_t slave_address)
     printf("\r\nMain Menu (Selected Slave: 0x%02X):\r\n\r\n", slave_address);
     printf("1. Toggle Master\r\n");
     printf("2. Toggle Slave LED\r\n");
+    printf("3. Write TX7332 Demo Registers\r\n");
 
     printf("\r\ns. Scan I2C Bus\r\n");
     printf("t. Toggle Trigger\r\n");
@@ -78,7 +79,11 @@ void process_command(char* input, uint8_t selected_slave){
 
             SendI2CPacket(selected_slave, CMD_TOGGLE_LED);
             break;
-
+        case '3':
+            // Write TX Registers
+        	printf("Writing TX7332 Demo registers SLAVE: 0x%02X ...\r\n", selected_slave);
+            SendI2CPacket(selected_slave, CMD_TX_DEMO);
+        	break;
         case 's':
             // Select Slave
             printf("Scan I2C Bus...\r\n");
