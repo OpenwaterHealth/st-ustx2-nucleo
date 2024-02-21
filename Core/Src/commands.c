@@ -51,6 +51,8 @@ static void Toggle_Trigger(){
 			printf("Error toggling trigger mode, current mode: %s\r\n", bTrigger?"ON":"OFF" );
 		}else{
 			bTrigger = false;
+
+            HAL_GPIO_WritePin(Trigger_GPIO_Port, Trigger_Pin , GPIO_PIN_RESET);
 			printf("Trigger mode: %s\r\n", bTrigger?"ON":"OFF" );
 		}
 

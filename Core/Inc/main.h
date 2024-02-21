@@ -93,6 +93,8 @@ extern TIM_HandleTypeDef htim3;
 #define nESTOP_Pin GPIO_PIN_5
 #define nESTOP_GPIO_Port GPIOC
 #define nESTOP_EXTI_IRQn EXTI9_5_IRQn
+#define Trigger_Pin GPIO_PIN_0
+#define Trigger_GPIO_Port GPIOB
 #define BUS0_cs0_Pin GPIO_PIN_12
 #define BUS0_cs0_GPIO_Port GPIOB
 #define BUS0_cs1_Pin GPIO_PIN_13
