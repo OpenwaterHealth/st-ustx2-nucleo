@@ -5,8 +5,8 @@
  *      Author: gvigelet
  */
 
+#include <console_commands.h>
 #include "main.h"
-#include "commands.h"
 #include "i2c_func.h"
 #include "i2c_protocol.h"
 
@@ -60,7 +60,7 @@ static void Toggle_Trigger(){
 
 }
 
-void process_command(char* input, uint8_t selected_slave){
+void process_menu_command(char* input, uint8_t selected_slave){
 
     printf("\r\n");
     if(selected_slave == 0xFF && *input != 's'){

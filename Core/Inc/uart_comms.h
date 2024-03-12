@@ -1,7 +1,7 @@
 /*
  * uart_comms.h
  *
- *  Created on: Jan 3, 2024
+ *  Created on: Mar 12, 2024
  *      Author: gvigelet
  */
 
@@ -10,11 +10,13 @@
 
 #include "main.h"  // This should contain your HAL includes and other basic includes.
 #include "cmsis_os.h"
+#include "common.h"
 #include <stdio.h>
 #include <stdbool.h>
 
-
-// Public function prototypes
-void comms_module_start(void);  // Initialization function, if necessary
+void comms_interface_init(void);
+void comms_start_task(void);
+void comms_handle_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t Size);
+void comms_handle_TxCallback(UART_HandleTypeDef *huart);
 
 #endif /* INC_UART_COMMS_H_ */

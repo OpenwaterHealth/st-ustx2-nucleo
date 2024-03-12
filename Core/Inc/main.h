@@ -61,6 +61,7 @@ extern uint8_t found_addresses[]; // Global array to store found addresses
 extern uint8_t found_address_count; // Counter for found addresses
 
 extern TIM_HandleTypeDef htim3;
+extern UART_HandleTypeDef huart1;
 
 /* USER CODE END EFP */
 
