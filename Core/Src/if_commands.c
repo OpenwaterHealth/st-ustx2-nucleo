@@ -79,6 +79,27 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 	}
 }
 
+static char retTriggerJson[256];
+static uint32_t TRIGGER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
+{
+	switch (cmd.command)
+	{
+
+	case CMD_GET_SWTRIG:
+		// refresh state
+		get_trigger_data(retTriggerJson, 256);
+		uartResp->command = cmd.command;
+		uartResp->data_len = strlen(retTriggerJson);
+		uartResp->data = (uint8_t *)retTriggerJson;
+		break;
+	default:
+		uartResp->data_len = 0;
+		uartResp->packet_type = OW_UNKNOWN;
+		break;
+	}
+
+}
+
 static void JSON_ProcessCommand(UartPacket *uartResp, UartPacket cmd, cJSON *root)
 {
 	switch (cmd.command)
@@ -126,6 +147,10 @@ UartPacket process_if_command(UartPacket cmd)
 		{
 			JSON_ProcessCommand(&uartResp, cmd, root);
 		}
+		break;
+	case OW_TRIGGER:
+		// process by the TX7332 Driver
+		TRIGGER_ProcessCommand(&uartResp, cmd);
 		break;
 	case OW_CMD:
 		process_basic_command(&uartResp, cmd);

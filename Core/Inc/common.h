@@ -77,6 +77,7 @@ typedef enum {
 	OW_DATA = 0xE4,
 	OW_JSON = 0xE5,
 	OW_TX7332 = 0xE6,
+	OW_TRIGGER = 0xE7,
 	OW_BAD_PARSE = 0xEC,
 	OW_BAD_CRC = 0xED,
 	OW_UNKNOWN = 0xEE,
@@ -91,7 +92,6 @@ typedef enum {
 	USTX_VERSION = 0xB3,
 	USTX_ID = 0xB4,
 	USTX_ECHO = 0xB5,
-
 } UstxCommands;
 
 typedef enum {
@@ -116,16 +116,6 @@ typedef struct  {
 	uint16_t crc;
 	uint8_t* data;
 } UartPacket;
-
-typedef struct {
-    uint32_t TriggerFrequencyHz;
-    uint32_t TriggerMode;
-    uint32_t TriggerPulseCount;
-    uint32_t TriggerPulseWidthUsec;
-    uint32_t TriggerStatus;
-} TimerData;
-
-void updateTimerDataFromPeripheral(TIM_HandleTypeDef* htim, uint32_t channel);
 
 
 #endif /* INC_COMMON_H_ */

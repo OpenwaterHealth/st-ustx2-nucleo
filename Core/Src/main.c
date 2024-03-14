@@ -24,6 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "trigger.h"
 #include "utils.h"
 
 /* USER CODE END Includes */
@@ -207,6 +208,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */// Create the menu task
+  init_trigger_pulse(&htim3, TIM_CHANNEL_3);
   comms_interface_init();
 
   /* USER CODE END RTOS_THREADS */
