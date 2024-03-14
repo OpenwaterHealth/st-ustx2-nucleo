@@ -31,7 +31,7 @@ static void updateTimerDataFromPeripheral(TIM_HandleTypeDef *htim, uint32_t chan
 	_timerDataConfig.TriggerPulseWidthUsec = pulseWidthUs; // Set the pulse width as needed
 
 	// Check the timer status to determine if it's running
-	_timerDataConfig.TriggerStatus = HAL_TIM_PWM_GetState(htim);
+	_timerDataConfig.TriggerStatus = TIM_CHANNEL_STATE_GET(htim, channel);
 }
 
 
@@ -48,7 +48,7 @@ static void timerDataToJson(char *jsonString, size_t max_length)
 			 "}",
 			 _timerDataConfig.TriggerFrequencyHz, _timerDataConfig.TriggerMode > 0 ? "PULSECOUNT" : "CONTINUOUS",
 			 _timerDataConfig.TriggerPulseCount, _timerDataConfig.TriggerPulseWidthUsec,
-			 _timerDataConfig.TriggerStatus == HAL_TIM_STATE_BUSY ? "RUNNING" : "STOPPED");
+			 _timerDataConfig.TriggerStatus == HAL_TIM_CHANNEL_STATE_BUSY ? "RUNNING" : "STOPPED");
 }
 
 static void errorToJson(char *jsonString, size_t max_length)
@@ -142,4 +142,17 @@ void get_trigger_data(char *jsonString, size_t max_length)
 	{
 		errorToJson(jsonString, max_length);
 	}
+}
+
+void stop_trigger_pulse()
+{
+	HAL_TIM_PWM_Stop(_triggerConfig.htim , _triggerConfig.channel);
+	updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
+}
+
+
+void start_trigger_pulse()
+{
+	HAL_TIM_PWM_Start(_triggerConfig.htim , _triggerConfig.channel);
+	updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
 }

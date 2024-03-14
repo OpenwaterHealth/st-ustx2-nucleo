@@ -9,6 +9,7 @@
 #include "if_commands.h"
 #include "uart_comms.h"
 #include "common.h"
+#include "trigger.h"
 #include "cJSON.h"
 
 #include <stdio.h>
@@ -80,7 +81,7 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 }
 
 static char retTriggerJson[256];
-static uint32_t TRIGGER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
+static void TRIGGER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
 {
 	switch (cmd.command)
 	{
@@ -91,6 +92,16 @@ static uint32_t TRIGGER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
 		uartResp->command = cmd.command;
 		uartResp->data_len = strlen(retTriggerJson);
 		uartResp->data = (uint8_t *)retTriggerJson;
+		break;
+	case CMD_START_SWTRIG:
+		start_trigger_pulse();
+		uartResp->command = CMD_START_SWTRIG;
+		uartResp->data_len = 0;
+		break;
+	case CMD_STOP_SWTRIG:
+		stop_trigger_pulse();
+		uartResp->command = CMD_STOP_SWTRIG;
+		uartResp->data_len = 0;
 		break;
 	default:
 		uartResp->data_len = 0;
