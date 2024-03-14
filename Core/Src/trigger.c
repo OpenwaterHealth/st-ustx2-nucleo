@@ -107,18 +107,33 @@ static int jsonToTimerData(const char *jsonString)
 // Function to configure htim3 based on triggerFrequency and triggerPulseWidthUsec
 static void configureTimer(TIM_HandleTypeDef *timer, uint32_t channel, uint32_t triggerFrequency, uint32_t triggerPulseWidthUsec)
 {
-	// Calculate the period (ARR) for the desired frequency
-	uint32_t timerClockFreq = HAL_RCC_GetPCLK2Freq() / 900; // Replace with your timer's clock source
-	uint32_t period = timerClockFreq / triggerFrequency - 1;
+	TIM_OC_InitTypeDef sConfigOC = {0};
+	uint32_t period = ((1000000/triggerFrequency)/2) - 1;
 
-	// Set the period for htim3
-	__HAL_TIM_SET_AUTORELOAD(timer, period);
+	timer->Init.Prescaler = 167;
+	timer->Init.CounterMode = TIM_COUNTERMODE_UP;
+	timer->Init.Period = period;
+	timer->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	timer->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 
-	// Calculate the pulse width in timer ticks based on triggerPulseWidthUsec
-	uint32_t pulseWidthTicks = (triggerPulseWidthUsec * timerClockFreq) / 1000000;
+	// Initialize the timer
+	if (HAL_TIM_Base_Init(timer) != HAL_OK)
+	{
+		Error_Handler();
+	}
 
-	// Set the pulse width for your specific channel (e.g., TIM_CHANNEL_1)
-	__HAL_TIM_SET_COMPARE(timer, channel, pulseWidthTicks);
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+	sConfigOC.Pulse = triggerPulseWidthUsec/2;
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+
+
+	if (HAL_TIM_PWM_ConfigChannel(timer, &sConfigOC, channel) != HAL_OK)
+	{
+		Error_Handler();
+	}
+
+	HAL_TIM_MspPostInit(timer);
 }
 
 void init_trigger_pulse(TIM_HandleTypeDef* htim, uint32_t channel)
@@ -155,4 +170,23 @@ void start_trigger_pulse()
 {
 	HAL_TIM_PWM_Start(_triggerConfig.htim , _triggerConfig.channel);
 	updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
+}
+
+bool set_trigger_data(char *jsonString)
+{
+	bool ret = false;
+	if(_timerDataConfig.TriggerStatus == HAL_TIM_CHANNEL_STATE_BUSY)
+	{
+		// stop timer pwm
+		HAL_TIM_PWM_Stop(_triggerConfig.htim , _triggerConfig.channel);
+		updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
+	}
+
+	if (jsonToTimerData((const char *)jsonString) == 0)
+	{
+		configureTimer(_triggerConfig.htim , _triggerConfig.channel, _timerDataConfig.TriggerFrequencyHz, _timerDataConfig.TriggerPulseWidthUsec);
+		ret = true;
+	}
+
+	return ret;
 }

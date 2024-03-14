@@ -94,14 +94,22 @@ static void TRIGGER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
 		uartResp->data = (uint8_t *)retTriggerJson;
 		break;
 	case CMD_START_SWTRIG:
-		start_trigger_pulse();
 		uartResp->command = CMD_START_SWTRIG;
 		uartResp->data_len = 0;
+		start_trigger_pulse();
 		break;
 	case CMD_STOP_SWTRIG:
-		stop_trigger_pulse();
 		uartResp->command = CMD_STOP_SWTRIG;
 		uartResp->data_len = 0;
+		stop_trigger_pulse();
+		break;
+	case CMD_SET_SWTRIG:
+		uartResp->command = cmd.command;
+		uartResp->data_len = 0;
+		if(!set_trigger_data((char *)cmd.data))
+		{
+			uartResp->packet_type = OW_ERROR;
+		}
 		break;
 	default:
 		uartResp->data_len = 0;

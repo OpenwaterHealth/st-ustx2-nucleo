@@ -32,5 +32,6 @@ void init_trigger_pulse(TIM_HandleTypeDef* htim, uint32_t channel);
 void start_trigger_pulse();
 void stop_trigger_pulse();
 void get_trigger_data(char *jsonString, size_t max_length);
+bool set_trigger_data(char *jsonString);
 
 #endif /* INC_TRIGGER_H_ */
