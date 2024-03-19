@@ -79,7 +79,7 @@ void process_menu_command(char* input, uint8_t selected_slave){
             // Toggle LED
             printf("Toggling Slave 0x%02X LED...\r\n", selected_slave);
 
-            SendI2CPacket(selected_slave, CMD_TOGGLE_LED);
+            SendI2CPacket(selected_slave, CMD_AFE_TOGGLE_LED);
             break;
         case '3':
             // Write TX Registers

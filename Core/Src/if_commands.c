@@ -8,6 +8,8 @@
 #include "main.h"
 #include "if_commands.h"
 #include "uart_comms.h"
+#include "i2c_func.h"
+#include "i2c_protocol.h"
 #include "common.h"
 #include "trigger.h"
 #include "cJSON.h"
@@ -71,6 +73,32 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 		uartResp->command = cmd.command;
 		uartResp->data_len = cmd.data_len;
 		uartResp->data = cmd.data;
+		break;
+	case USTX_TOGGLE_LED:
+		// exact copy
+		uartResp->id = cmd.id;
+		uartResp->packet_type = cmd.packet_type;
+		uartResp->command = cmd.command;
+		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		break;
+	default:
+		uartResp->data_len = 0;
+		uartResp->packet_type = OW_UNKNOWN;
+		// uartResp.data = (uint8_t*)&cmd.tag;
+		break;
+	}
+}
+
+static void process_afe_command(UartPacket *uartResp, UartPacket cmd)
+{
+	switch (cmd.command)
+	{
+	case CMD_TOGGLE_LED:
+		// Toggle Slave
+        SendI2CPacket(0x28, CMD_AFE_TOGGLE_LED);
+		uartResp->id = cmd.id;
+		uartResp->packet_type = cmd.packet_type;
+		uartResp->command = cmd.command;
 		break;
 	default:
 		uartResp->data_len = 0;
@@ -173,6 +201,9 @@ UartPacket process_if_command(UartPacket cmd)
 		break;
 	case OW_CMD:
 		process_basic_command(&uartResp, cmd);
+		break;
+	case OW_AFE:
+		process_afe_command(&uartResp, cmd);
 		break;
 	default:
 		uartResp.data_len = 0;

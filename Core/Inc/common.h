@@ -78,6 +78,7 @@ typedef enum {
 	OW_JSON = 0xE5,
 	OW_TX7332 = 0xE6,
 	OW_TRIGGER = 0xE7,
+	OW_AFE = 0xE8,
 	OW_BAD_PARSE = 0xEC,
 	OW_BAD_CRC = 0xED,
 	OW_UNKNOWN = 0xEE,
@@ -92,6 +93,7 @@ typedef enum {
 	USTX_VERSION = 0xB3,
 	USTX_ID = 0xB4,
 	USTX_ECHO = 0xB5,
+	USTX_TOGGLE_LED = 0xB6,
 } UstxCommands;
 
 typedef enum {
@@ -105,6 +107,7 @@ typedef enum {
 	CMD_START_SWTRIG = 0xCC,
 	CMD_STOP_SWTRIG = 0xCD,
 	CMD_STATUS_SWTRIG = 0xCE,
+	CMD_TOGGLE_LED = 0xCF,
 
 } TX7332Commands;
 
