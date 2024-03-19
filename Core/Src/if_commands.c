@@ -75,11 +75,18 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 		uartResp->data = cmd.data;
 		break;
 	case USTX_TOGGLE_LED:
-		// exact copy
 		uartResp->id = cmd.id;
 		uartResp->packet_type = cmd.packet_type;
 		uartResp->command = cmd.command;
 		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		break;
+	case USTX_ENUM_AFES:
+		uartResp->id = cmd.id;
+		uartResp->packet_type = cmd.packet_type;
+		uartResp->command = cmd.command;
+		I2C_scan();
+		uartResp->data_len = found_address_count;
+		uartResp->data = found_addresses;
 		break;
 	default:
 		uartResp->data_len = 0;

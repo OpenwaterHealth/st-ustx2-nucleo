@@ -36,6 +36,10 @@ void I2C_scan() {
     }
 
     printf("\r\n");
+    printf("\r\nFound %d I2C devices:\r\n", found_address_count);
+    for (int i = 0; i < found_address_count; i++) {
+        printf("Address %d: 0x%02X\r\n", i + 1, found_addresses[i]);
+    }
     fflush(stdout);
 }
 

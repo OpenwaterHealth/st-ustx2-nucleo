@@ -94,6 +94,7 @@ typedef enum {
 	USTX_ID = 0xB4,
 	USTX_ECHO = 0xB5,
 	USTX_TOGGLE_LED = 0xB6,
+	USTX_ENUM_AFES = 0xB7,
 } UstxCommands;
 
 typedef enum {
