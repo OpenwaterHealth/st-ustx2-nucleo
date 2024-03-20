@@ -4,19 +4,23 @@
  *  Created on: Jan 4, 2024
  *      Author: gvigelet
  */
-
+#include "main.h"
 #include "i2c_func.h"
 #include <string.h>
 
 extern I2C_HandleTypeDef hi2c1;
 uint8_t selected_slave = 0xFF;
 
-void I2C_scan() {
+void reset_slaves()
+{
     printf("Scanning I2C bus for devices...\r\n");
     HAL_GPIO_WritePin(nRST_SLV_GPIO_Port, nRST_SLV_Pin, GPIO_PIN_RESET);
     osDelay(10);
     HAL_GPIO_WritePin(nRST_SLV_GPIO_Port, nRST_SLV_Pin, GPIO_PIN_SET);
-    osDelay(15);
+    osDelay(50);
+}
+
+void I2C_scan() {
 
     // Reset the global array and counter
     memset(found_addresses, 0, MAX_FOUND_ADDRESSES );

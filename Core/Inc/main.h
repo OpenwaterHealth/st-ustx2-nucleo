@@ -62,6 +62,7 @@ extern uint8_t found_address_count; // Counter for found addresses
 
 extern TIM_HandleTypeDef htim3;
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
 
 /* USER CODE END EFP */
 

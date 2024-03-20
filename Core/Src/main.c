@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "uart_comms.h"
 #include "trigger.h"
+#include "logging.h"
 #include "utils.h"
 
 /* USER CODE END Includes */
@@ -89,38 +90,6 @@ static void MX_TIM4_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
-#ifdef __GNUC__
-	/* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
-		 set to 'Yes') calls __io_putchar() */
-	#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-	#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
-
-
-#ifdef __GNUC__
-int _write(int fd, const void *buf, size_t count){
-	const uint8_t * ptrBuf = buf;
-
-	while (HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_TX);
-	for(int i=0; i< count; i++)
-	{
-		HAL_UART_Transmit(&huart2, ptrBuf, 1, 5);
-		ptrBuf++;
-	}
-	while (HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_TX);
-	return count;
-}
-#else
-PUTCHAR_PROTOTYPE
-{
-  /* Place your implementation of fputc here */
-	//HAL_UART_Transmit(&huart5, (uint8_t *)&ch, 1,10);
-	UART_putChar( (uint8_t) ch);
-  return ch;
-}
-#endif
-
 
 uint8_t rxBuffer[COMMAND_MAX_SIZE];
 uint8_t txBuffer[COMMAND_MAX_SIZE];
@@ -176,6 +145,7 @@ int main(void)
   MX_CRC_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+  init_dma_logging();
   printf("\033c");
   printf("Openwater USTX2 Test FW v1.0.0\r\n\r\n");
   printf("CPU Clock Frequency: %lu MHz\r\n", HAL_RCC_GetSysClockFreq() / 1000000);
@@ -716,22 +686,44 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
-	comms_handle_RxCpltCallback(huart, Size);
+	if(huart->Instance == USART1)
+	{
+		comms_handle_RxCpltCallback(huart, Size);
+	}
 }
 
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
 {
-	comms_handle_RxCpltCallback(huart, 0);
+	if(huart->Instance == USART1)
+	{
+		comms_handle_RxCpltCallback(huart, 0);
+	}
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	comms_handle_RxCpltCallback(huart, 1);
+	if(huart->Instance == USART1)
+	{
+		comms_handle_RxCpltCallback(huart, 1);
+	}
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-	comms_handle_TxCallback(huart);
+	if(huart->Instance == USART1)
+	{
+		comms_handle_TxCallback(huart);
+	}
+	else if(huart->Instance == USART2)
+	{
+		logging_UART_TxCpltCallback(huart);
+	}
+}
+
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+                                    signed char *pcTaskName )
+{
+	printf("%s\r\n", pcTaskName);
 }
 
 /* USER CODE END 4 */

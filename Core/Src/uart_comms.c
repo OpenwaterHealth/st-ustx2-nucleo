@@ -61,7 +61,6 @@ static void UART_INTERFACE_Task(void *argument) {
 
     while(1) {
     	HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rxBuffer, COMMAND_MAX_SIZE);
-
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
         int bufferIndex = 0;
@@ -142,7 +141,6 @@ NextDataPacket:
 		UART_INTERFACE_SendDMA(&resp);
 		memset(rxBuffer, 0, sizeof(rxBuffer));
 		ptrReceive=0;
-
     }
 
 }

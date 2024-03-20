@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+void reset_slaves(void);
 void I2C_scan(void);
 uint8_t I2C_get_selected_slave();
 void I2C_set_selected_slave(uint8_t slave_addr);
