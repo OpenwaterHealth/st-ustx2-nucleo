@@ -156,5 +156,5 @@ void SendI2CPacket(uint8_t address, uint8_t command)
 	pTx++;
 	*pTx = 0x5A;
 
-	send_buffer_to_slave(address, tx_buffer, I2C_MAX_TX_BUFFER_SIZE);
+	send_buffer_to_slave(address, tx_buffer, 8); // this is temporary while we get the reworked protocol in place
 }
