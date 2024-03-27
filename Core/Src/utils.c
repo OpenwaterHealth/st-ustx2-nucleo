@@ -89,7 +89,7 @@ static void printBuffer(uint8_t* buffer, uint32_t size) {
 }
 #endif
 
-uint16_t util_crc16(uint8_t* buf, uint32_t size) {
+uint16_t util_crc16(const uint8_t* buf, uint32_t size) {
 	uint16_t crc = 0xFFFF;
 
 	for (int i = 0; i < size; i++) {

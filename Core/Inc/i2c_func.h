@@ -18,6 +18,6 @@ void I2C_scan(void);
 uint8_t I2C_get_selected_slave();
 void I2C_set_selected_slave(uint8_t slave_addr);
 void I2C_set_next_slave(void);
-uint8_t send_packet_to_slave(uint8_t slave_addr, uint8_t* pData, uint8_t len);
+uint8_t send_buffer_to_slave(uint8_t slave_addr, uint8_t* pBuffer, uint16_t buf_len);
 
 #endif /* INC_I2C_FUNC_H_ */

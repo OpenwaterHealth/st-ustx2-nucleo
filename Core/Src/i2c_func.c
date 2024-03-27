@@ -47,7 +47,7 @@ void I2C_scan() {
     fflush(stdout);
 }
 
-uint8_t send_packet_to_slave(uint8_t slave_addr, uint8_t* pData, uint8_t len)
+uint8_t send_buffer_to_slave(uint8_t slave_addr, uint8_t* pBuffer, uint16_t buf_len)
 {
 	// Check if the I2C handle is valid
     if (HAL_I2C_GetState(&hi2c1) != HAL_I2C_STATE_READY) {
@@ -55,7 +55,7 @@ uint8_t send_packet_to_slave(uint8_t slave_addr, uint8_t* pData, uint8_t len)
         return 1; // I2C is not in a ready state
     }
 
-    if(HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)(slave_addr << 1), pData, len, HAL_MAX_DELAY)!= HAL_OK)
+    if(HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)(slave_addr << 1), pBuffer, buf_len, HAL_MAX_DELAY)!= HAL_OK)
 	{
         /* Error_Handler() function is called when error occurs. */
         Error_Handler();
