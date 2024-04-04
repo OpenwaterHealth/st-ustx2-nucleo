@@ -1,160 +1,182 @@
 /*
  * i2c_protocol.c
  *
- *  Created on: Jan 8, 2024
+ *  Created on: Mar 30, 2024
  *      Author: gvigelet
  */
 
-#include "main.h"
 #include "i2c_protocol.h"
+
 #include "utils.h"
-#include "i2c_func.h"
-#include <stdint.h>
-#include <string.h>
 #include <stdio.h>
 
-static uint8_t tx_buffer[I2C_MAX_TX_BUFFER_SIZE];
-
-static uint8_t tx_buffer[I2C_MAX_TX_BUFFER_SIZE];
-
-void i2c_packet_print(const I2C_TX_Packet* packet) {
+void i2c_tx_packet_print(const I2C_TX_Packet* packet) {
     printf("\r\nI2C TX PACKET\r\n\r\n");
-    printf("Start Byte (sb): 0x%02X\n", packet->sb);
-    printf("ID: 0x%04X\n", packet->id);
-    printf("Command (cmd): 0x%02X\n", packet->cmd);
-    printf("Status: 0x%02X\n", packet->status);
-    printf("Data Length: %d\n", packet->data_len);
+    printf("Packet Length: 0x%02X\r\n", packet->pkt_len);
+    printf("ID: 0x%04X\r\n", packet->id);
+    printf("Command (cmd): 0x%02X\r\n", packet->cmd);
+    printf("Status: 0x%02X\r\n", packet->status);
+    printf("Data Length: %d\r\n", packet->data_len);
     printf("Data: ");
     for (int i = 0; i < packet->data_len; i++) {
         printf("0x%02X ", packet->pData[i]);
     }
-    printf("\nCRC: 0x%04X\n", packet->crc);
-    printf("End Byte (eb): 0x%02X\n", packet->eb);
+    printf("\r\nCRC: 0x%04X\r\n", packet->crc);
+    printf("Packet Length: %d\r\n\r\n", packet->data_len + 8);
+
+}
+
+void i2c_status_packet_print(const I2C_STATUS_Packet* packet)
+{
+    printf("\r\nI2C STATUS PACKET\r\n\r\n");
+    printf("ID: 0x%04X\r\n", packet->id);
+    printf("Command (cmd): 0x%02X\r\n", packet->cmd);
+    printf("Status: 0x%02X\r\n", packet->status);
+    printf("Reserved: 0x%02X\r\n", packet->reserved);
+    printf("Data Length: %d\r\n", packet->data_len);
+    printf("\r\nCRC: 0x%04X\r\n", packet->crc);
+    printf("Packet Length: %d\r\n\r\n", (int)sizeof(I2C_STATUS_Packet));
+
 }
 
 bool i2c_packet_fromBuffer(const uint8_t* buffer, I2C_TX_Packet* pTX) {
     bool ret = false;
     uint16_t crc = 0xFFFF;
     const uint8_t* pBuff = buffer;
-
-    pTX->sb = *buffer; // Start Byte
+    pTX->pkt_len = *buffer;
     buffer++;
-    pTX->id = *(uint16_t*)buffer; // Packet ID
+    pTX->id = (uint16_t)((buffer[1] << 8) | buffer[0]); // Packet ID (little-endian)
     buffer += 2;
     pTX->cmd = *buffer; // Command ID
     buffer++;
     pTX->status = *buffer; // Status ID
     buffer++;
-    pTX->data_len = *(uint16_t*)buffer; // Data Length
-    buffer += 2;
+    pTX->data_len = *buffer;
+    buffer++;
     pTX->pData = (uint8_t*)buffer;
     buffer += pTX->data_len;
-    pTX->crc = *(uint16_t*)buffer; // CRC
-    buffer += 2;
-    pTX->eb = *buffer; // End Byte
+    pTX->crc = (uint16_t)((buffer[1] << 8) | buffer[0]); // CRC (little-endian)
 
     // Calculate CRC
-    crc = util_crc16(&pBuff[1], pTX->data_len + 6);
+    crc = util_crc16(pBuff, pTX->data_len + 6);
     ret = crc == pTX->crc;
     return ret;
 }
 
-uint16_t i2c_packet_toBuffer(I2C_TX_Packet* pTX, uint8_t* buffer) {
-    uint16_t crc = 0xFFFF;
+size_t i2c_packet_toBuffer(I2C_TX_Packet* pTX, uint8_t* buffer) {
+    if (pTX == NULL || buffer == NULL) {
+        // Handle error: invalid pointer
+        return 0;
+    }
+
     int i = 0;
     uint8_t* pBuff = buffer;
 
-    *buffer = 0xA5; // Start Byte
+    pTX->crc = 0xFFFF;
+
+    // packet length
+    *buffer = pTX->data_len + 8;
+    pTX->pkt_len = *buffer;
     buffer++;
-    *(uint16_t*)buffer = pTX->id; // Packet ID
+
+    // Write Packet ID
+    buffer[0] = (uint8_t)(pTX->id & 0xFF);
+    buffer[1] = (uint8_t)((pTX->id >> 8) & 0xFF);
     buffer += 2;
-    *buffer = pTX->cmd; // Command ID
+
+    // Write Command ID
+    *buffer = pTX->cmd;
     buffer++;
-    *buffer = pTX->status; // Status ID
+
+    // Write Status ID
+    *buffer = pTX->status;
     buffer++;
-    *(uint16_t*)buffer = pTX->data_len; // Data Length
-    buffer += 2;
+
+    // Write Data Length
+    *buffer = pTX->data_len;
+    buffer++;
+
+    // Write Data
     if (pTX->pData) {
         for (i = 0; i < pTX->data_len; i++) {
             *buffer = pTX->pData[i];
             buffer++;
         }
     }
+
     // Calculate CRC
-    crc = util_crc16(&pBuff[1], pTX->data_len + 6);
-    *(uint16_t*)buffer = crc; // CRC
+    pTX->crc = util_crc16(pBuff, buffer - pBuff);
+
+    // Write CRC
+    buffer[0] = (uint8_t)(pTX->crc & 0xFF);
+    buffer[1] = (uint8_t)((pTX->crc >> 8) & 0xFF);
     buffer += 2;
-    *buffer = 0x5A; // End Byte
-    return crc;
+
+    // Return the total packet size
+    return (buffer - pBuff);
 }
 
+bool i2c_status_packet_fromBuffer(const uint8_t* buffer, I2C_STATUS_Packet* pTX) {
+    bool ret = false;
+    uint16_t crc = 0xFFFF;
+    const uint8_t* pBuff = buffer;
+    pTX->id = (uint16_t)((buffer[1] << 8) | buffer[0]); // Packet ID (little-endian)
+    buffer += 2;
+    pTX->cmd = *buffer; // Command ID
+    buffer++;
+    pTX->status = *buffer; // Status ID
+    buffer++;
+    pTX->reserved = *buffer; // Reserved
+    buffer++;
+    pTX->data_len = *buffer;
+    buffer++;
+    pTX->crc = (uint16_t)((buffer[1] << 8) | buffer[0]); // CRC (little-endian)
 
-void send_i2c_packet(uint8_t address, I2C_TX_Packet *pTX)
-{
-	uint16_t crc = 0xFFFF;
-	int i = 0;
-	memset(tx_buffer, 0, I2C_MAX_TX_BUFFER_SIZE);
-	uint8_t* pTxBuffer = tx_buffer;
-
-	*pTxBuffer = 0xA5; 						// Start Byte
-	pTxBuffer++;
-    *pTxBuffer = pTX->id & 0xFF;			// packet id
-    pTxBuffer++;
-	*pTxBuffer = (pTX->id >> 8) & 0xFF;
-	pTxBuffer++;
-	*pTxBuffer = pTX->cmd;					// command id
-	pTxBuffer++;
-	*pTxBuffer = pTX->status;				// status id
-	pTxBuffer++;
-    *pTxBuffer = pTX->data_len & 0xFF;			// data length
-    pTxBuffer++;
-	*pTxBuffer = (pTX->data_len >> 8) & 0xFF;
-	pTxBuffer++;
-	if(pTX->pData){
-		for(i=0; i < pTX->data_len; i++)
-		{
-			*pTxBuffer = pTX->pData[i];
-			pTxBuffer++;
-		}
-	}
-	// calculate CRC
-    crc = util_crc16(&tx_buffer[1], pTX->data_len + 6); // Calculate CRC
-    *pTxBuffer = crc & 0xFF;
-    pTxBuffer++;
-	*pTxBuffer = (crc >> 8) & 0xFF;
-	pTxBuffer++;
-	*pTxBuffer = 0x5A;						// End Byte
-
-#ifdef DEBUG_COMMS
-	i2c_packet_print(pTX);
-#endif
-	send_buffer_to_slave(address, tx_buffer, I2C_MAX_TX_BUFFER_SIZE);
-
+    // Calculate CRC
+    crc = util_crc16(pBuff, 6);
+    ret = crc == pTX->crc;
+    return ret;
 }
 
+size_t i2c_status_packet_toBuffer(I2C_STATUS_Packet* pTX, uint8_t* buffer) {
+    if (pTX == NULL || buffer == NULL) {
+        // Handle error: invalid pointer
+        return 0;
+    }
 
-void SendI2CPacket(uint8_t address, uint8_t command)
-{
-	uint16_t crc = 0xFFFF;
-	memset(tx_buffer, 0, I2C_MAX_TX_BUFFER_SIZE);
-	uint8_t* pTx = tx_buffer;
+    uint8_t* pBuff = buffer;
 
-	*pTx = 0xA5;
-	pTx++;
-	*pTx = command;
-	pTx++;
-    crc = util_crc16(&tx_buffer[1], 1); // Calculate CRC
-    *pTx = crc & 0xFF;
-	pTx++;
-	*pTx = (crc >> 8) & 0xFF;
-	pTx++;
-	*pTx = 0x00;
-	pTx++;
-	*pTx = 0x00;
-	pTx++;
-	*pTx = 0x00;
-	pTx++;
-	*pTx = 0x5A;
+    pTX->crc = 0xFFFF;
 
-	send_buffer_to_slave(address, tx_buffer, 8); // this is temporary while we get the reworked protocol in place
+    // Write Packet ID
+    buffer[0] = (uint8_t)(pTX->id & 0xFF);
+    buffer[1] = (uint8_t)((pTX->id >> 8) & 0xFF);
+    buffer += 2;
+
+    // Write Command ID
+    *buffer = pTX->cmd;
+    buffer++;
+
+    // Write Status ID
+    *buffer = pTX->status;
+    buffer++;
+
+    // Write Reserved
+    *buffer = pTX->reserved;
+    buffer++;
+
+    // Write Data Length
+    *buffer = pTX->data_len;
+    buffer++;
+
+    // Calculate CRC
+    pTX->crc = util_crc16(pBuff, buffer - pBuff);
+
+    // Write CRC
+    buffer[0] = (uint8_t)(pTX->crc & 0xFF);
+    buffer[1] = (uint8_t)((pTX->crc >> 8) & 0xFF);
+    buffer += 2;
+
+    // Return the total packet size
+    return (buffer - pBuff);
 }

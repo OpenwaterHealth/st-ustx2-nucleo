@@ -12,7 +12,7 @@
 
 
 /*
- * Communication Protocol Packet Structure:
+ * UART Communication Protocol Packet Structure:
  *
  * | Start Byte | ID | Packet Type | Command | Length | Payload | CRC16 | End Byte |
  *
@@ -79,6 +79,7 @@ typedef enum {
 	OW_TX7332 = 0xE6,
 	OW_TRIGGER = 0xE7,
 	OW_AFE = 0xE8,
+	OW_I2C_PASSTHRU = 0xE9,
 	OW_BAD_PARSE = 0xEC,
 	OW_BAD_CRC = 0xED,
 	OW_UNKNOWN = 0xEE,
@@ -111,6 +112,10 @@ typedef enum {
 	CMD_TOGGLE_LED = 0xCF,
 
 } TX7332Commands;
+
+typedef enum {
+	AFE_CMD_TOGGLE_LED = 0xCF,
+} AFE_Commands;;
 
 typedef struct  {
 	uint16_t id;

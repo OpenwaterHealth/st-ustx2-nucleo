@@ -147,7 +147,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   init_dma_logging();
   printf("\033c");
-  printf("Openwater USTX2 Test FW v1.0.0\r\n\r\n");
+  printf("Openwater USTX2 Controller (Nucleo) FW v1.0.1\r\n\r\n");
   printf("CPU Clock Frequency: %lu MHz\r\n", HAL_RCC_GetSysClockFreq() / 1000000);
   PrintI2CSpeed(&hi2c1);
 

@@ -7,10 +7,10 @@
 
 #include "main.h"
 #include "if_commands.h"
-#include "uart_comms.h"
-#include "i2c_func.h"
-#include "i2c_protocol.h"
 #include "common.h"
+#include "uart_comms.h"
+#include "i2c_master.h"
+#include "i2c_protocol.h"
 #include "trigger.h"
 #include "cJSON.h"
 
@@ -19,6 +19,8 @@
 
 static uint8_t FIRMWARE_VERSION_DATA[3] = {0, 1, 1};
 static uint32_t id_words[3] = {0};
+uint8_t receive_afe_buff[256] = {0};
+uint8_t send_afe_buff[256] = {0};
 
 /* assertion helper macros */
 #define assert_has_type(item, item_type) TEST_ASSERT_BITS_MESSAGE(0xFF, item_type, item->type, "Item doesn't have expected type.")
@@ -84,7 +86,7 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 		uartResp->id = cmd.id;
 		uartResp->packet_type = cmd.packet_type;
 		uartResp->command = cmd.command;
-		I2C_scan();
+		found_address_count = I2C_scan(found_addresses, MAX_FOUND_ADDRESSES, true);
 		uartResp->data_len = found_address_count;
 		uartResp->data = found_addresses;
 		break;
@@ -98,11 +100,37 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 
 static void process_afe_command(UartPacket *uartResp, UartPacket cmd)
 {
+	uint16_t rx_len = 0;
+	uint16_t send_len = 0;
+	I2C_TX_Packet send_afe_packet;
+	I2C_STATUS_Packet afe_satus_packet;
 	switch (cmd.command)
 	{
 	case CMD_TOGGLE_LED:
 		// Toggle Slave
-        SendI2CPacket(0x28, CMD_AFE_TOGGLE_LED);
+		send_afe_packet.cmd = AFE_CMD_TOGGLE_LED;
+		send_afe_packet.status =0;
+		send_afe_packet.data_len = 0;
+		send_afe_packet.id = 1;
+		send_afe_packet.pData = 0;
+
+		if(found_address_count == 0){
+
+		}else{
+			printf("Send Buffer to slave\r\n");
+			send_len = i2c_packet_toBuffer(&send_afe_packet, send_afe_buff);
+			send_buffer_to_slave(0x28, send_afe_buff, send_len);
+#if 0
+			HAL_Delay(250);
+			printf("Read from slave\r\n");
+			rx_len = read_buffer_from_slave(0x28, receive_afe_buff, 1024);
+			printf("Received %d Bytes \r\n", rx_len);
+			printBuffer(receive_afe_buff, rx_len);
+			i2c_status_packet_fromBuffer(receive_afe_buff, &afe_satus_packet);
+
+			i2c_status_packet_print(&afe_satus_packet);
+#endif
+		}
 		uartResp->id = cmd.id;
 		uartResp->packet_type = cmd.packet_type;
 		uartResp->command = cmd.command;
@@ -176,16 +204,30 @@ static void JSON_ProcessCommand(UartPacket *uartResp, UartPacket cmd, cJSON *roo
 	}
 }
 
+
+static void print_uart_packet(const UartPacket* packet) {
+    printf("ID: 0x%04X\r\n", packet->id);
+    printf("Packet Type: 0x%02X\r\n", packet->packet_type);
+    printf("Command: 0x%02X\r\n", packet->command);
+    printf("Data Length: %d\r\n", packet->data_len);
+    printf("CRC: 0x%04X\r\n", packet->crc);
+    printf("Data: ");
+    for (int i = 0; i < packet->data_len; i++) {
+        printf("0x%02X ", packet->data[i]);
+    }
+    printf("\r\n");
+}
+
 UartPacket process_if_command(UartPacket cmd)
 {
 	UartPacket uartResp;
 	cJSON *root = NULL;
+	I2C_TX_Packet i2c_packet;
 
 	uartResp.id = cmd.id;
 	uartResp.packet_type = OW_RESP;
 	uartResp.data_len = 0;
 	uartResp.data = 0;
-
 	switch (cmd.packet_type)
 	{
 	case OW_JSON:
@@ -211,6 +253,18 @@ UartPacket process_if_command(UartPacket cmd)
 		break;
 	case OW_AFE:
 		process_afe_command(&uartResp, cmd);
+		break;
+	case OW_I2C_PASSTHRU:
+
+		print_uart_packet(&cmd);
+
+        printBuffer(cmd.data, 10);
+		i2c_packet_fromBuffer(cmd.data, &i2c_packet);
+		i2c_tx_packet_print(&i2c_packet);
+
+		HAL_Delay(20);
+		send_buffer_to_slave(cmd.command, cmd.data, 10);
+
 		break;
 	default:
 		uartResp.data_len = 0;
