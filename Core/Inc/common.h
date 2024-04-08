@@ -80,6 +80,7 @@ typedef enum {
 	OW_TRIGGER = 0xE7,
 	OW_AFE = 0xE8,
 	OW_I2C_PASSTHRU = 0xE9,
+	OW_CONTROLLER = 0xEA,
 	OW_BAD_PARSE = 0xEC,
 	OW_BAD_CRC = 0xED,
 	OW_UNKNOWN = 0xEE,
@@ -95,8 +96,29 @@ typedef enum {
 	USTX_ID = 0xB4,
 	USTX_ECHO = 0xB5,
 	USTX_TOGGLE_LED = 0xB6,
-	USTX_ENUM_AFES = 0xB7,
 } UstxCommands;
+
+typedef enum {
+	OW_CMD_PING = 0x00,
+	OW_CMD_PONG = 0x01,
+	OW_CMD_VERSION = 0x02,
+	OW_CMD_ECHO = 0x03,
+	OW_CMD_TOGGLE_LED = 0x04,
+	OW_CMD_HWID = 0x05,
+	OW_CMD_RESET = 0xFF,
+} UstxGlobalCommands;
+
+typedef enum {
+	OW_CTRL_SCAN_I2C = 0x10,
+	OW_CTRL_WRITE_I2C = 0x11,
+	OW_CTRL_READ_I2C = 0x12,
+	OW_CTRL_SET_SWTRIG = 0x13,
+	OW_CTRL_GET_SWTRIG = 0x14,
+	OW_CTRL_START_SWTRIG = 0x15,
+	OW_CTRL_STOP_SWTRIG = 0x16,
+	OW_CTRL_STATUS_SWTRIG = 0x17,
+	OW_CTRL_RESET = 0x1F,
+} UstxControllerCommands;
 
 typedef enum {
 	CMD_READ_ADDR = 0xC0,

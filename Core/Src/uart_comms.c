@@ -18,7 +18,6 @@ extern uint8_t txBuffer[COMMAND_MAX_SIZE];
 
 static void UART_INTERFACE_Task(void *argument);
 volatile uint32_t ptrReceive;
-
 TaskHandle_t xCommsInterfaceTask = NULL;
 
 static void UART_INTERFACE_SendDMA(UartPacket* pResp)
@@ -34,14 +33,16 @@ static void UART_INTERFACE_SendDMA(UartPacket* pResp)
 	txBuffer[bufferIndex++] = pResp->command;
 	txBuffer[bufferIndex++] = (pResp->data_len) >> 8;
 	txBuffer[bufferIndex++] = (pResp->data_len) & 0xFF;
-	memcpy(&txBuffer[bufferIndex], pResp->data, pResp->data_len);
-	bufferIndex += pResp->data_len;
+	if(pResp->data_len > 0)
+	{
+		memcpy(&txBuffer[bufferIndex], pResp->data, pResp->data_len);
+		bufferIndex += pResp->data_len;
+	}
 	uint16_t crc = util_crc16(&txBuffer[1], pResp->data_len + 6);
 	txBuffer[bufferIndex++] = crc >> 8;
 	txBuffer[bufferIndex++] = crc & 0xFF;
 
 	txBuffer[bufferIndex++] = OW_END_BYTE;
-	//hexdump("[DEBUG COMMS] TX Data", txBuffer, data_len+5);
 
 	HAL_UART_Transmit_DMA(&huart1, txBuffer, bufferIndex);
 	ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
@@ -58,7 +59,6 @@ static void UART_INTERFACE_Task(void *argument) {
 	UartPacket cmd;
 	UartPacket resp;
     uint16_t calculated_crc;
-
     while(1) {
     	HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rxBuffer, COMMAND_MAX_SIZE);
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
@@ -137,7 +137,6 @@ static void UART_INTERFACE_Task(void *argument) {
 		resp = process_if_command(cmd);
 
 NextDataPacket:
-
 		UART_INTERFACE_SendDMA(&resp);
 		memset(rxBuffer, 0, sizeof(rxBuffer));
 		ptrReceive=0;

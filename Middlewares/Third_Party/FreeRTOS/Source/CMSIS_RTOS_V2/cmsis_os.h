@@ -367,7 +367,7 @@ typedef struct {
   osStatus                    status;   ///< status code: event or error information
   union {
     uint32_t                       v;   ///< message as 32-bit value
-    void                          *p;   ///< message or mail as void pointer
+    void                          *parser;   ///< message or mail as void pointer
     int32_t                  signals;   ///< signal flags
   } value;                              ///< event value
   union {

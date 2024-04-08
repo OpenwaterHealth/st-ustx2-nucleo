@@ -113,6 +113,7 @@ static void PrintI2CSpeed(I2C_HandleTypeDef* hi2c) {
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -191,6 +192,7 @@ int main(void)
   osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -744,7 +746,7 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
     osDelay(2000);
-    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+    //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
   }
   /* USER CODE END 5 */
 }

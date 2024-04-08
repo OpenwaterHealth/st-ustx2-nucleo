@@ -8,11 +8,12 @@
 #ifndef INC_TRIGGER_H_
 #define INC_TRIGGER_H_
 
+#include "jsmn.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-
 
 typedef struct {
     uint32_t TriggerFrequencyHz;
@@ -32,6 +33,6 @@ void init_trigger_pulse(TIM_HandleTypeDef* htim, uint32_t channel);
 void start_trigger_pulse();
 void stop_trigger_pulse();
 void get_trigger_data(char *jsonString, size_t max_length);
-bool set_trigger_data(char *jsonString);
+bool set_trigger_data(char *jsonString, size_t str_len);
 
 #endif /* INC_TRIGGER_H_ */

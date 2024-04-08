@@ -7,10 +7,10 @@
 
 #include "main.h"
 #include "trigger.h"
-#include "cJSON.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 static OW_TimerData _timerDataConfig;
 static OW_TriggerConfig _triggerConfig;
@@ -66,6 +66,72 @@ static void errorToJson(char *jsonString, size_t max_length)
 			 "NOT CONFIGURED");
 }
 
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+  if (tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&
+      strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+    return 0;
+  }
+  return -1;
+}
+
+static int jsonToTimerData(const char *jsonString)
+{
+	int i;
+	int r;
+    jsmn_parser parser;
+    parser.size = sizeof(parser);
+    jsmn_init(&parser, NULL);
+    jsmntok_t t[16];
+
+	// init parser
+	jsmn_init(&parser, NULL);
+	r = jsmn_parse(&parser, jsonString, strlen(jsonString), t,
+				 sizeof(t) / sizeof(t[0]), NULL);
+	if (r < 0) {
+		printf("jsonToTimerData Failed to parse JSON: %d\n", r);
+		return 1;
+	}
+
+	/* Assume the top-level element is an object */
+	if (r < 1 || t[0].type != JSMN_OBJECT) {
+		printf("jsonToTimerData Object expected\n");
+		return 1;
+	}
+
+
+	/* Loop over all keys of the root object */
+	for (i = 1; i < r; i++) {
+	    if (jsoneq(jsonString, &t[i], "TriggerFrequencyHz") == 0) {
+			/* We may use strndup() to fetch string value */
+	    	_timerDataConfig.TriggerFrequencyHz = strtol(jsonString + t[i + 1].start, NULL, 10);
+			//printf("- TriggerFrequencyHz: %.*s\r\n", t[i + 1].end - t[i + 1].start,
+			//		jsonString + t[i + 1].start);
+			i++;
+	    } else if (jsoneq(jsonString, &t[i], "TriggerMode") == 0) {
+	    	/* We may additionally check if the value is either "true" or "false" */
+	    	_timerDataConfig.TriggerMode = strtol(jsonString + t[i + 1].start, NULL, 10);
+	    	i++;
+		} else if (jsoneq(jsonString, &t[i], "TriggerPulseCount") == 0) {
+			/* We may want to do strtol() here to get numeric value */
+			_timerDataConfig.TriggerPulseCount = strtol(jsonString + t[i + 1].start, NULL, 10);
+			i++;
+		} else if (jsoneq(jsonString, &t[i], "TriggerPulseWidthUsec") == 0) {
+			/* We may want to do strtol() here to get numeric value */
+			_timerDataConfig.TriggerPulseWidthUsec = strtol(jsonString + t[i + 1].start, NULL, 10);
+			i++;
+		}
+
+	}
+
+    if ((1000000 / _timerDataConfig.TriggerFrequencyHz) <= _timerDataConfig.TriggerPulseWidthUsec)
+    {
+        // invalid pulsewidth
+        return 1;
+    }
+    return 0; // Successful parsing
+}
+
+#if 0
 static int jsonToTimerData(const char *jsonString)
 {
 	// Parse the JSON string and extract values
@@ -103,6 +169,7 @@ static int jsonToTimerData(const char *jsonString)
 	}
 	return 0; // Successful parsing
 }
+#endif
 
 // Function to configure htim3 based on triggerFrequency and triggerPulseWidthUsec
 static void configureTimer(TIM_HandleTypeDef *timer, uint32_t channel, uint32_t triggerFrequency, uint32_t triggerPulseWidthUsec)
@@ -172,9 +239,14 @@ void start_trigger_pulse()
 	updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
 }
 
-bool set_trigger_data(char *jsonString)
+bool set_trigger_data(char *jsonString, size_t str_len)
 {
+	uint8_t tempArr[255] = {0};
 	bool ret = false;
+
+    // Copy the JSON string to tempArr
+    memcpy((char *)tempArr, (char *)jsonString, str_len);
+
 	if(_timerDataConfig.TriggerStatus == HAL_TIM_CHANNEL_STATE_BUSY)
 	{
 		// stop timer pwm
@@ -182,9 +254,9 @@ bool set_trigger_data(char *jsonString)
 		updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
 	}
 
-	if (jsonToTimerData((const char *)jsonString) == 0)
+	if (jsonToTimerData((const char *)tempArr) == 0)
 	{
-		configureTimer(_triggerConfig.htim , _triggerConfig.channel, _timerDataConfig.TriggerFrequencyHz, _timerDataConfig.TriggerPulseWidthUsec);
+	 	configureTimer(_triggerConfig.htim , _triggerConfig.channel, _timerDataConfig.TriggerFrequencyHz, _timerDataConfig.TriggerPulseWidthUsec);
 		ret = true;
 	}
 
