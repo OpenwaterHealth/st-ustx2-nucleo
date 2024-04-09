@@ -15,10 +15,9 @@
 extern uint8_t rxBuffer[COMMAND_MAX_SIZE];
 extern uint8_t txBuffer[COMMAND_MAX_SIZE];
 
-
-static void UART_INTERFACE_Task(void *argument);
 volatile uint32_t ptrReceive;
-TaskHandle_t xCommsInterfaceTask = NULL;
+volatile uint8_t rx_flag = 0;
+volatile uint8_t tx_flag = 0;
 
 static void UART_INTERFACE_SendDMA(UartPacket* pResp)
 {
@@ -45,11 +44,11 @@ static void UART_INTERFACE_SendDMA(UartPacket* pResp)
 	txBuffer[bufferIndex++] = OW_END_BYTE;
 
 	HAL_UART_Transmit_DMA(&huart1, txBuffer, bufferIndex);
-	ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+	while(!tx_flag);
 }
 
 // This is the FreeRTOS task
-static void UART_INTERFACE_Task(void *argument) {
+void comms_start_task() {
 
 	memset(rxBuffer, 0, sizeof(rxBuffer));
 	ptrReceive = 0;
@@ -59,9 +58,11 @@ static void UART_INTERFACE_Task(void *argument) {
 	UartPacket cmd;
 	UartPacket resp;
     uint16_t calculated_crc;
+    rx_flag = 0;
+    tx_flag = 0;
     while(1) {
     	HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rxBuffer, COMMAND_MAX_SIZE);
-		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+		while(!rx_flag);
 
         int bufferIndex = 0;
 
@@ -140,32 +141,24 @@ NextDataPacket:
 		UART_INTERFACE_SendDMA(&resp);
 		memset(rxBuffer, 0, sizeof(rxBuffer));
 		ptrReceive=0;
+		rx_flag = 0;
     }
 
 }
 
 // Callback functions
 void comms_handle_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t pos) {
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
     if (huart->Instance == USART1) {
         // Notify the task
-    	if (xCommsInterfaceTask != NULL) {
-    		vTaskNotifyGiveFromISR(xCommsInterfaceTask, &xHigherPriorityTaskWoken);
-    		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-    	}
+    	rx_flag = 1;
     }
 }
 
 void comms_handle_TxCallback(UART_HandleTypeDef *huart) {
 
 	if (huart->Instance == USART1) {
-		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-		// Notify the task
-		if (xCommsInterfaceTask != NULL) {
-			vTaskNotifyGiveFromISR(xCommsInterfaceTask, &xHigherPriorityTaskWoken);
-			portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-		}
+		tx_flag = 1;
 	}
 }
 
@@ -174,19 +167,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
     if (huart->Instance == USART1) {
         // Handle errors here. Maybe reset DMA reception, etc.
     }
-}
-
-// Function to start the UART task
-void comms_interface_init(void) {
-
-	xTaskCreate(
-		UART_INTERFACE_Task,                  /* Task function */
-        "commsInterfaceTask",                /* Name of task */
-        128,                        /* Stack size in words (not bytes!) */
-        NULL,                       /* Parameter passed into the task */
-        tskIDLE_PRIORITY + 4,       /* Priority */
-		&xCommsInterfaceTask                 /* Task handle */
-    );
 }
 
 
