@@ -77,7 +77,8 @@ typedef enum {
 	OW_DATA = 0xE4,
 	OW_JSON = 0xE5,
 	OW_TX7332 = 0xE6,
-	OW_AFE = 0xE8,
+	OW_AFE_READ = 0xE7,
+	OW_AFE_SEND = 0xE8,
 	OW_I2C_PASSTHRU = 0xE9,
 	OW_CONTROLLER = 0xEA,
 	OW_BAD_PARSE = 0xEC,
@@ -120,8 +121,9 @@ typedef enum {
 } UstxTX7332Commands;
 
 typedef enum {
-	OW_AFE_XXXX = 0x30,
-} AFE_Commands;;
+	OW_AFE_STATUS = 0x30,
+	OW_AFE_ENUM_TX7332 = 0x31,
+} UstxAfeCommands;
 
 typedef struct  {
 	uint16_t id;

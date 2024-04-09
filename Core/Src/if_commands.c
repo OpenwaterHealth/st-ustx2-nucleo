@@ -70,12 +70,10 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 	}
 }
 
-static void process_afe_command(UartPacket *uartResp, UartPacket cmd)
+static void process_afe_send(UartPacket *uartResp, UartPacket cmd)
 {
-	uint16_t rx_len = 0;
 	uint16_t send_len = 0;
 	I2C_TX_Packet send_afe_packet;
-	I2C_STATUS_Packet afe_satus_packet;
 
 	// initialize send packet
 	send_afe_packet.id = cmd.id;
@@ -97,28 +95,41 @@ static void process_afe_command(UartPacket *uartResp, UartPacket cmd)
 		uartResp->data_len = 0;
 	}
 
+	send_len = i2c_packet_toBuffer(&send_afe_packet, send_afe_buff);
+	send_buffer_to_slave(0x28, send_afe_buff, send_len);
+	uartResp->packet_type = OW_ACK;
+#if 0
 	switch (cmd.command)
 	{
 	case OW_CMD_PING:
 		// Ping Slave
+		printf("Send Ping\r\n");
+		//HAL_Delay(1);
+		//rx_len = read_status_register_of_slave(0x28, receive_afe_buff, 255);
+		//printf("Received %d Bytes \r\n", rx_len);
+		//printBuffer(receive_afe_buff, rx_len);
+		//i2c_status_packet_fromBuffer(receive_afe_buff, &afe_satus_packet);
+		//i2c_status_packet_print(&afe_satus_packet);
+		break;
+	case OW_CMD_PONG:
+		// Pong Slave
+		printf("Send Pong\r\n");
 		send_len = i2c_packet_toBuffer(&send_afe_packet, send_afe_buff);
 		send_buffer_to_slave(0x28, send_afe_buff, send_len);
 		uartResp->packet_type = OW_ACK;
-#if 0
-		HAL_Delay(10);
-		rx_len = read_status_register_of_slave(0x28, receive_afe_buff, 255);
-		printf("Received %d Bytes \r\n", rx_len);
-		printBuffer(receive_afe_buff, rx_len);
-		i2c_status_packet_fromBuffer(receive_afe_buff, &afe_satus_packet);
-		i2c_status_packet_print(&afe_satus_packet);
-#endif
+		//HAL_Delay(1);
+		//rx_len = read_status_register_of_slave(0x28, receive_afe_buff, 255);
+		//printf("Received %d Bytes \r\n", rx_len);
+		//printBuffer(receive_afe_buff, rx_len);
+		//i2c_status_packet_fromBuffer(receive_afe_buff, &afe_satus_packet);
+		//i2c_status_packet_print(&afe_satus_packet);
 		break;
 	case OW_CMD_TOGGLE_LED:
 		// Toggle Slave
+		printf("Send Toggle LED\r\n");
 		send_len = i2c_packet_toBuffer(&send_afe_packet, send_afe_buff);
 		send_buffer_to_slave(0x28, send_afe_buff, send_len);
 		uartResp->packet_type = OW_ACK;
-#if 0
 		HAL_Delay(250);
 		printf("Read from slave\r\n");
 		rx_len = read_status_register_of_slave(0x28, receive_afe_buff, 1024);
@@ -127,15 +138,41 @@ static void process_afe_command(UartPacket *uartResp, UartPacket cmd)
 		i2c_status_packet_fromBuffer(receive_afe_buff, &afe_satus_packet);
 
 		i2c_status_packet_print(&afe_satus_packet);
-#endif
 
 		break;
 	default:
+		printf("Unknown\r\n");
 		uartResp->data_len = 0;
 		uartResp->packet_type = OW_UNKNOWN;
 		// uartResp.data = (uint8_t*)&cmd.tag;
 		break;
 	}
+#endif
+}
+
+static void process_afe_read(UartPacket *uartResp, UartPacket cmd)
+{
+	uint16_t rx_len = 0;
+	I2C_STATUS_Packet afe_satus_packet;
+
+	if(found_address_count == 0){
+		printf("No AFE's found\r\n");
+		uartResp->id = cmd.id;
+		uartResp->packet_type = OW_ERROR;
+		uartResp->command = cmd.command;
+		return;
+	}else{
+		uartResp->id = cmd.id;
+		uartResp->packet_type = cmd.packet_type;
+		uartResp->command = cmd.command;
+		uartResp->data_len = 0;
+	}
+
+	rx_len = read_status_register_of_slave(0x28, receive_afe_buff, 1024);
+	printf("Received %d Bytes \r\n", rx_len);
+	printBuffer(receive_afe_buff, rx_len);
+	i2c_status_packet_fromBuffer(receive_afe_buff, &afe_satus_packet);
+	i2c_status_packet_print(&afe_satus_packet);
 }
 
 static void CONTROLLER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
@@ -287,8 +324,11 @@ UartPacket process_if_command(UartPacket cmd)
 	case OW_CMD:
 		process_basic_command(&uartResp, cmd);
 		break;
-	case OW_AFE:
-		process_afe_command(&uartResp, cmd);
+	case OW_AFE_READ:
+		process_afe_read(&uartResp, cmd);
+		break;
+	case OW_AFE_SEND:
+		process_afe_send(&uartResp, cmd);
 		break;
 	case OW_I2C_PASSTHRU:
 
