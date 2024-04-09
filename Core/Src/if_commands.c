@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
+static char retTriggerJson[256];
 static uint8_t FIRMWARE_VERSION_DATA[3] = {0, 1, 1};
 static uint32_t id_words[3] = {0};
 uint8_t receive_afe_buff[256] = {0};
@@ -25,29 +26,29 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 {
 	switch (cmd.command)
 	{
-	case USTX_NOP:
-		uartResp->command = USTX_NOP;
+	case OW_CMD_NOP:
+		uartResp->command = OW_CMD_NOP;
 		break;
-	case USTX_PING:
-		uartResp->command = USTX_PONG;
+	case OW_CMD_PING:
+		uartResp->command = OW_CMD_PONG;
 		break;
-	case USTX_PONG:
-		uartResp->command = USTX_PING;
+	case OW_CMD_PONG:
+		uartResp->command = OW_CMD_PING;
 		break;
-	case USTX_VERSION:
-		uartResp->command = USTX_VERSION;
+	case OW_CMD_VERSION:
+		uartResp->command = OW_CMD_VERSION;
 		uartResp->data_len = sizeof(FIRMWARE_VERSION_DATA);
 		uartResp->data = FIRMWARE_VERSION_DATA;
 		break;
-	case USTX_ID:
-		uartResp->command = USTX_ID;
+	case OW_CMD_HWID:
+		uartResp->command = OW_CMD_HWID;
 		id_words[0] = HAL_GetUIDw0();
 		id_words[1] = HAL_GetUIDw1();
 		id_words[2] = HAL_GetUIDw2();
 		uartResp->data_len = 16;
 		uartResp->data = (uint8_t *)&id_words;
 		break;
-	case USTX_ECHO:
+	case OW_CMD_ECHO:
 		// exact copy
 		uartResp->id = cmd.id;
 		uartResp->packet_type = cmd.packet_type;
@@ -55,7 +56,7 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 		uartResp->data_len = cmd.data_len;
 		uartResp->data = cmd.data;
 		break;
-	case USTX_TOGGLE_LED:
+	case OW_CMD_TOGGLE_LED:
 		uartResp->id = cmd.id;
 		uartResp->packet_type = cmd.packet_type;
 		uartResp->command = cmd.command;
@@ -71,40 +72,63 @@ static void process_basic_command(UartPacket *uartResp, UartPacket cmd)
 
 static void process_afe_command(UartPacket *uartResp, UartPacket cmd)
 {
-	//uint16_t rx_len = 0;
+	uint16_t rx_len = 0;
 	uint16_t send_len = 0;
 	I2C_TX_Packet send_afe_packet;
-	//I2C_STATUS_Packet afe_satus_packet;
+	I2C_STATUS_Packet afe_satus_packet;
+
+	// initialize send packet
+	send_afe_packet.id = cmd.id;
+	send_afe_packet.cmd = cmd.command;
+	send_afe_packet.reserved =0;
+	send_afe_packet.data_len = 0;
+	send_afe_packet.pData = 0;
+
+	if(found_address_count == 0){
+		printf("No AFE's found\r\n");
+		uartResp->id = cmd.id;
+		uartResp->packet_type = OW_ERROR;
+		uartResp->command = cmd.command;
+		return;
+	}else{
+
+		uartResp->id = cmd.id;
+		uartResp->command = cmd.command;
+		uartResp->data_len = 0;
+	}
+
 	switch (cmd.command)
 	{
-	case CMD_TOGGLE_LED:
-		// Toggle Slave
-		send_afe_packet.cmd = AFE_CMD_TOGGLE_LED;
-		send_afe_packet.status =0;
-		send_afe_packet.data_len = 0;
-		send_afe_packet.id = 1;
-		send_afe_packet.pData = 0;
-
-		if(found_address_count == 0){
-
-		}else{
-			printf("Send Buffer to slave\r\n");
-			send_len = i2c_packet_toBuffer(&send_afe_packet, send_afe_buff);
-			send_buffer_to_slave(0x28, send_afe_buff, send_len);
+	case OW_CMD_PING:
+		// Ping Slave
+		send_len = i2c_packet_toBuffer(&send_afe_packet, send_afe_buff);
+		send_buffer_to_slave(0x28, send_afe_buff, send_len);
+		uartResp->packet_type = OW_ACK;
 #if 0
-			HAL_Delay(250);
-			printf("Read from slave\r\n");
-			rx_len = read_buffer_from_slave(0x28, receive_afe_buff, 1024);
-			printf("Received %d Bytes \r\n", rx_len);
-			printBuffer(receive_afe_buff, rx_len);
-			i2c_status_packet_fromBuffer(receive_afe_buff, &afe_satus_packet);
-
-			i2c_status_packet_print(&afe_satus_packet);
+		HAL_Delay(10);
+		rx_len = read_status_register_of_slave(0x28, receive_afe_buff, 255);
+		printf("Received %d Bytes \r\n", rx_len);
+		printBuffer(receive_afe_buff, rx_len);
+		i2c_status_packet_fromBuffer(receive_afe_buff, &afe_satus_packet);
+		i2c_status_packet_print(&afe_satus_packet);
 #endif
-		}
-		uartResp->id = cmd.id;
-		uartResp->packet_type = cmd.packet_type;
-		uartResp->command = cmd.command;
+		break;
+	case OW_CMD_TOGGLE_LED:
+		// Toggle Slave
+		send_len = i2c_packet_toBuffer(&send_afe_packet, send_afe_buff);
+		send_buffer_to_slave(0x28, send_afe_buff, send_len);
+		uartResp->packet_type = OW_ACK;
+#if 0
+		HAL_Delay(250);
+		printf("Read from slave\r\n");
+		rx_len = read_status_register_of_slave(0x28, receive_afe_buff, 1024);
+		printf("Received %d Bytes \r\n", rx_len);
+		printBuffer(receive_afe_buff, rx_len);
+		i2c_status_packet_fromBuffer(receive_afe_buff, &afe_satus_packet);
+
+		i2c_status_packet_print(&afe_satus_packet);
+#endif
+
 		break;
 	default:
 		uartResp->data_len = 0;
@@ -112,45 +136,6 @@ static void process_afe_command(UartPacket *uartResp, UartPacket cmd)
 		// uartResp.data = (uint8_t*)&cmd.tag;
 		break;
 	}
-}
-
-static char retTriggerJson[256];
-static void TRIGGER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
-{
-	switch (cmd.command)
-	{
-
-	case CMD_GET_SWTRIG:
-		// refresh state
-		get_trigger_data(retTriggerJson, 256);
-		uartResp->command = cmd.command;
-		uartResp->data_len = strlen(retTriggerJson);
-		uartResp->data = (uint8_t *)retTriggerJson;
-		break;
-	case CMD_START_SWTRIG:
-		uartResp->command = CMD_START_SWTRIG;
-		uartResp->data_len = 0;
-		start_trigger_pulse();
-		break;
-	case CMD_STOP_SWTRIG:
-		uartResp->command = CMD_STOP_SWTRIG;
-		uartResp->data_len = 0;
-		stop_trigger_pulse();
-		break;
-	case CMD_SET_SWTRIG:
-		uartResp->command = cmd.command;
-		uartResp->data_len = 0;
-		if(!set_trigger_data((char *)cmd.data, cmd.data_len))
-		{
-			uartResp->packet_type = OW_ERROR;
-		}
-		break;
-	default:
-		uartResp->data_len = 0;
-		uartResp->packet_type = OW_UNKNOWN;
-		break;
-	}
-
 }
 
 static void CONTROLLER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
@@ -249,10 +234,10 @@ static void JSON_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
     printf("Found %d Tokens\r\n", ret);
 	switch (cmd.command)
 	{
-	case USTX_NOP:
-		uartResp->command = USTX_NOP;
+	case OW_CMD_NOP:
+		uartResp->command = OW_CMD_NOP;
 		break;
-	case USTX_ECHO:
+	case OW_CMD_ECHO:
 		// exact copy
 		uartResp->id = cmd.id;
 		uartResp->packet_type = cmd.packet_type;
@@ -298,10 +283,6 @@ UartPacket process_if_command(UartPacket cmd)
 	case OW_CONTROLLER:
 		// process by the USTX Controller
 		CONTROLLER_ProcessCommand(&uartResp, cmd);
-		break;
-	case OW_TRIGGER:
-		// process by the TX7332 Driver
-		TRIGGER_ProcessCommand(&uartResp, cmd);
 		break;
 	case OW_CMD:
 		process_basic_command(&uartResp, cmd);

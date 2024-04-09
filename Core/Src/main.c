@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -148,7 +147,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   init_dma_logging();
   printf("\033c");
-  printf("Openwater USTX2 Controller (Nucleo) FW v1.0.1\r\n\r\n");
+  printf("Openwater USTX2 Controller (Nucleo) FW v1.0.2\r\n\r\n");
   printf("CPU Clock Frequency: %lu MHz\r\n", HAL_RCC_GetSysClockFreq() / 1000000);
   PrintI2CSpeed(&hi2c1);
 
@@ -469,7 +468,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 921600;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -739,8 +738,6 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask,
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-  /* init code for USB_DEVICE */
-  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;)

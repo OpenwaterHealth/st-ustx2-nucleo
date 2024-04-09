@@ -77,7 +77,6 @@ typedef enum {
 	OW_DATA = 0xE4,
 	OW_JSON = 0xE5,
 	OW_TX7332 = 0xE6,
-	OW_TRIGGER = 0xE7,
 	OW_AFE = 0xE8,
 	OW_I2C_PASSTHRU = 0xE9,
 	OW_CONTROLLER = 0xEA,
@@ -89,23 +88,14 @@ typedef enum {
 } UartPacketTypes;
 
 typedef enum {
-	USTX_NOP = 0xB0,
-	USTX_PING = 0xB1,
-	USTX_PONG = 0xB2,
-	USTX_VERSION = 0xB3,
-	USTX_ID = 0xB4,
-	USTX_ECHO = 0xB5,
-	USTX_TOGGLE_LED = 0xB6,
-} UstxCommands;
-
-typedef enum {
 	OW_CMD_PING = 0x00,
 	OW_CMD_PONG = 0x01,
 	OW_CMD_VERSION = 0x02,
 	OW_CMD_ECHO = 0x03,
 	OW_CMD_TOGGLE_LED = 0x04,
 	OW_CMD_HWID = 0x05,
-	OW_CMD_RESET = 0xFF,
+	OW_CMD_NOP = 0x0E,
+	OW_CMD_RESET = 0x0F,
 } UstxGlobalCommands;
 
 typedef enum {
@@ -117,26 +107,20 @@ typedef enum {
 	OW_CTRL_START_SWTRIG = 0x15,
 	OW_CTRL_STOP_SWTRIG = 0x16,
 	OW_CTRL_STATUS_SWTRIG = 0x17,
-	OW_CTRL_RESET = 0x1F,
 } UstxControllerCommands;
 
 typedef enum {
-	CMD_READ_ADDR = 0xC0,
-	CMD_WRITE_ADDR = 0xC1,
-	CMD_WRITE_DEMO = 0xC2,
-	CMD_VERIFY_DEMO = 0xC3,
-	CMD_WRITE_BLOCK = 0xC4,
-	CMD_SET_SWTRIG = 0xCA,
-	CMD_GET_SWTRIG = 0xCB,
-	CMD_START_SWTRIG = 0xCC,
-	CMD_STOP_SWTRIG = 0xCD,
-	CMD_STATUS_SWTRIG = 0xCE,
-	CMD_TOGGLE_LED = 0xCF,
-
-} TX7332Commands;
+	OW_TX7332_STATUS = 0x20,
+	OW_TX7332_ENUM = 0x21,
+	OW_TX7332_WREG = 0x22,
+	OW_TX7332_RREG = 0x23,
+	OW_TX7332_DEMO = 0x2D,
+	OW_TX7332_TEST = 0x2E,
+	OW_TX7332_RESET = 0x2F,
+} UstxTX7332Commands;
 
 typedef enum {
-	AFE_CMD_TOGGLE_LED = 0xCF,
+	OW_AFE_XXXX = 0x30,
 } AFE_Commands;;
 
 typedef struct  {
