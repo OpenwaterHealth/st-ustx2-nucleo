@@ -30,6 +30,8 @@ static void UART_INTERFACE_SendDMA(UartPacket* pResp)
 	txBuffer[bufferIndex++] = pResp->id & 0xFF;
 	txBuffer[bufferIndex++] = pResp->packet_type;
 	txBuffer[bufferIndex++] = pResp->command;
+	txBuffer[bufferIndex++] = pResp->addr;
+	txBuffer[bufferIndex++] = pResp->reserved;
 	txBuffer[bufferIndex++] = (pResp->data_len) >> 8;
 	txBuffer[bufferIndex++] = (pResp->data_len) & 0xFF;
 	if(pResp->data_len > 0)
@@ -37,7 +39,7 @@ static void UART_INTERFACE_SendDMA(UartPacket* pResp)
 		memcpy(&txBuffer[bufferIndex], pResp->data, pResp->data_len);
 		bufferIndex += pResp->data_len;
 	}
-	uint16_t crc = util_crc16(&txBuffer[1], pResp->data_len + 6);
+	uint16_t crc = util_crc16(&txBuffer[1], pResp->data_len + 8);
 	txBuffer[bufferIndex++] = crc >> 8;
 	txBuffer[bufferIndex++] = crc & 0xFF;
 
@@ -78,6 +80,8 @@ void comms_start_task() {
         bufferIndex+=2;
         cmd.packet_type = rxBuffer[bufferIndex++];
         cmd.command = rxBuffer[bufferIndex++];
+        cmd.addr = rxBuffer[bufferIndex++];
+        cmd.reserved = rxBuffer[bufferIndex++];
 
         // Extract payload length
         cmd.data_len = (rxBuffer[bufferIndex] << 8 | (rxBuffer[bufferIndex+1] & 0xFF ));
@@ -89,6 +93,8 @@ void comms_start_task() {
         	// data can exceed buffersize but every buffer must have a start and end packet
         	// command that will send more data than one buffer will follow with data packets to complete the request
         	resp.id = cmd.id;
+        	resp.addr = 0;
+        	resp.reserved = 0;
             resp.data_len = 0;
             resp.packet_type = OW_NAK;
             goto NextDataPacket;
@@ -115,13 +121,15 @@ void comms_start_task() {
         }
         else
         {
-        	calculated_crc = util_crc16(&rxBuffer[1], cmd.data_len + 6);
+        	calculated_crc = util_crc16(&rxBuffer[1], cmd.data_len + 8);
         }
 
         // Check CRC
         if (cmd.crc != calculated_crc) {
             // Send NACK response due to bad CRC
         	resp.id = cmd.id;
+        	resp.addr = 0;
+        	resp.reserved = 0;
             resp.data_len = 0;
             resp.packet_type = OW_BAD_CRC;
             goto NextDataPacket;
@@ -131,6 +139,8 @@ void comms_start_task() {
         if (rxBuffer[bufferIndex++] != OW_END_BYTE) {
         	resp.id = cmd.id;
             resp.data_len = 0;
+        	resp.addr = 0;
+        	resp.reserved = 0;
             resp.packet_type = OW_NAK;
             goto NextDataPacket;
         }

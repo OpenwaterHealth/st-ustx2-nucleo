@@ -14,7 +14,7 @@
 /*
  * UART Communication Protocol Packet Structure:
  *
- * | Start Byte | ID | Packet Type | Command | Length | Payload | CRC16 | End Byte |
+ * | Start Byte | ID | Packet Type | Command | addr | reserved | Length | Payload | CRC16 | End Byte |
  *
  * Definitions:
  *
@@ -135,6 +135,8 @@ typedef struct  {
 	uint16_t id;
 	uint8_t packet_type;
 	uint8_t command;
+	uint8_t addr;
+	uint8_t reserved;
 	uint16_t data_len;
 	uint16_t crc;
 	uint8_t* data;
