@@ -13,6 +13,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define I2C_STATUS_SIZE 8
+#define I2C_BUFFER_SIZE 264
+
 typedef struct {
 	uint8_t pkt_len;
 	uint16_t id;
