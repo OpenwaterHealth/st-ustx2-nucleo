@@ -128,12 +128,12 @@ static void process_afe_read(UartPacket *uartResp, UartPacket cmd)
 	}
 
 	rx_len = read_data_register_of_slave(slave_addr, receive_afe_buff, rx_len);
-	printf("Received %d Bytes \r\n", rx_len);
-	printBuffer(receive_afe_buff, rx_len);
+	// printf("Received %d Bytes \r\n", rx_len);
+	// printBuffer(receive_afe_buff, rx_len);
 	uartResp->data_len = rx_len;
 	uartResp->data = receive_afe_buff;
 	i2c_packet_fromBuffer(receive_afe_buff, &afe_data_packet);
-	i2c_tx_packet_print(&afe_data_packet);
+	// i2c_tx_packet_print(&afe_data_packet);
 }
 
 static void process_afe_read_status(UartPacket *uartResp, UartPacket cmd)
@@ -154,7 +154,7 @@ static void process_afe_read_status(UartPacket *uartResp, UartPacket cmd)
 	}
 
 	rx_len = read_status_register_of_slave(slave_addr, receive_afe_status, I2C_STATUS_SIZE);
-	printf("Received %d Bytes \r\n", rx_len);
+	// printf("Received %d Bytes \r\n", rx_len);
 	uartResp->data_len = rx_len;
 	uartResp->data = receive_afe_status;
 }
@@ -212,7 +212,7 @@ static void CONTROLLER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
 			uartResp->command = cmd.command;
 			uartResp->addr = cmd.addr;
 			uartResp->reserved = cmd.reserved;
-			found_address_count = I2C_scan(found_addresses, MAX_FOUND_ADDRESSES, true);
+			found_address_count = I2C_scan(found_addresses, MAX_FOUND_ADDRESSES, false);
 			uartResp->data_len = found_address_count;
 			uartResp->data = found_addresses;
 			break;
@@ -345,9 +345,9 @@ UartPacket process_if_command(UartPacket cmd)
 
 		print_uart_packet(&cmd);
 
-        printBuffer(cmd.data, 10);
+        // printBuffer(cmd.data, 10);
 		i2c_packet_fromBuffer(cmd.data, &i2c_packet);
-		i2c_tx_packet_print(&i2c_packet);
+		// i2c_tx_packet_print(&i2c_packet);
 
 		HAL_Delay(20);
 		send_buffer_to_slave(cmd.command, cmd.data, 10);

@@ -57,7 +57,7 @@ uint8_t send_buffer_to_slave(uint8_t slave_addr, uint8_t* pBuffer, uint16_t buf_
         return 1; // I2C is not in a ready state
     }
 
-	printf("===> Sending Packet %d Bytes\r\n", buf_len);
+	// printf("===> Sending Packet %d Bytes\r\n", buf_len);
     if(HAL_I2C_Master_Transmit(&I2C_DEVICE, (uint16_t)(slave_addr << 1), pBuffer, buf_len, HAL_MAX_DELAY)!= HAL_OK)
 	{
         /* Error_Handler() function is called when error occurs. */
@@ -77,7 +77,7 @@ uint8_t read_status_register_of_slave(uint8_t slave_addr, uint8_t* pBuffer, uint
         return 1; // I2C is not in a ready state
     }
 
-	printf("===> Receive Status Packet %d Bytes\r\n", rx_len);
+	// printf("===> Receive Status Packet %d Bytes\r\n", rx_len);
 
 #if 0
 
@@ -108,7 +108,7 @@ uint8_t read_data_register_of_slave(uint8_t slave_addr, uint8_t* pBuffer, size_t
         return 1; // I2C is not in a ready state
     }
 
-	printf("===> Receive Data Packet %d Bytes\r\n", rx_len);
+	// printf("===> Receive Data Packet %d Bytes\r\n", rx_len);
 
     if(HAL_I2C_Mem_Read(&I2C_DEVICE, (uint16_t)(slave_addr << 1), 0x01, I2C_MEMADD_SIZE_8BIT, pBuffer, rx_len, HAL_MAX_DELAY)!= HAL_OK)
     {
