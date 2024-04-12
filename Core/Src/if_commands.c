@@ -84,7 +84,6 @@ static void process_afe_send(UartPacket *uartResp, UartPacket cmd)
 	send_afe_packet.cmd = cmd.command;
 	send_afe_packet.reserved =0;
 	send_afe_packet.data_len = cmd.data_len;
-	send_afe_packet.pData = cmd.data;
 
 	if(found_address_count == 0){
 		printf("No AFE's found\r\n");
@@ -93,7 +92,6 @@ static void process_afe_send(UartPacket *uartResp, UartPacket cmd)
 		uartResp->command = cmd.command;
 		return;
 	}else{
-
 		uartResp->id = cmd.id;
 		uartResp->command = cmd.command;
 		uartResp->data_len = 0;
@@ -101,11 +99,13 @@ static void process_afe_send(UartPacket *uartResp, UartPacket cmd)
 
 	if(send_afe_packet.data_len==0){
 		send_afe_packet.pData = NULL;
+	}else{
+		send_afe_packet.pData = cmd.data;
 	}
 
 	send_len = i2c_packet_toBuffer(&send_afe_packet, send_afe_buff);
 	send_buffer_to_slave(slave_addr, send_afe_buff, send_len);
-	HAL_Delay(1);
+	HAL_Delay(5);
 	process_afe_read_status(uartResp, cmd);
 }
 
