@@ -90,6 +90,7 @@ typedef enum {
 
 typedef enum {
 	OW_CODE_SUCCESS = 0x00,
+	OW_CODE_IDENT_ERROR = 0xFD,
 	OW_CODE_DATA_ERROR = 0xFE,
 	OW_CODE_ERROR = 0xFF,
 } UstxErrorCodes;
@@ -137,8 +138,8 @@ typedef struct  {
 	uint8_t addr;
 	uint8_t reserved;
 	uint16_t data_len;
-	uint16_t crc;
 	uint8_t* data;
+	uint16_t crc;
 } UartPacket;
 
 

@@ -82,7 +82,7 @@ static void process_afe_send(UartPacket *uartResp, UartPacket cmd)
 	// initialize send packet
 	send_afe_packet.id = cmd.id;
 	send_afe_packet.cmd = cmd.command;
-	send_afe_packet.reserved =0;
+	send_afe_packet.reserved = cmd.reserved;
 	send_afe_packet.data_len = cmd.data_len;
 
 	if(found_address_count == 0){
@@ -132,7 +132,7 @@ static void process_afe_read(UartPacket *uartResp, UartPacket cmd)
 	// printBuffer(receive_afe_buff, rx_len);
 	uartResp->data_len = rx_len;
 	uartResp->data = receive_afe_buff;
-	i2c_packet_fromBuffer(receive_afe_buff, &afe_data_packet);
+	//i2c_packet_fromBuffer(receive_afe_buff, &afe_data_packet);
 	// i2c_tx_packet_print(&afe_data_packet);
 }
 
