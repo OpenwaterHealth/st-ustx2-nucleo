@@ -83,6 +83,8 @@ static void MX_TIM4_Init(void);
 uint8_t rxBuffer[COMMAND_MAX_SIZE];
 uint8_t txBuffer[COMMAND_MAX_SIZE];
 
+uint8_t FIRMWARE_VERSION_DATA[3] = {1, 0, 4};
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -137,11 +139,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
   init_dma_logging();
   printf("\033c");
-  printf("Openwater USTX2 Controller (Nucleo) FW v1.0.3\r\n\r\n");
+  printf("Openwater USTX2 Controller (Nucleo) FW v%d.%d.%d\r\n\r\n",FIRMWARE_VERSION_DATA[0], FIRMWARE_VERSION_DATA[1], FIRMWARE_VERSION_DATA[2]);
   printf("CPU Clock Frequency: %lu MHz\r\n", HAL_RCC_GetSysClockFreq() / 1000000);
   PrintI2CSpeed(&hi2c1);
 
   init_trigger_pulse(&htim3, TIM_CHANNEL_3);
+  HAL_Delay(1);
+  deinit_trigger_pulse(&htim3, TIM_CHANNEL_3);
   comms_start_task();
 
   /* USER CODE END 2 */
@@ -674,6 +678,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 		logging_UART_TxCpltCallback(huart);
 	}
 }
+
 
 /* USER CODE END 4 */
 

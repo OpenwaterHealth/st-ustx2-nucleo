@@ -30,6 +30,7 @@ typedef struct {
 } OW_TriggerConfig;
 
 void init_trigger_pulse(TIM_HandleTypeDef* htim, uint32_t channel);
+void deinit_trigger_pulse(TIM_HandleTypeDef* htim, uint32_t channel);
 void start_trigger_pulse();
 void stop_trigger_pulse();
 void get_trigger_data(char *jsonString, size_t max_length);

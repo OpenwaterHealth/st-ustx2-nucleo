@@ -15,6 +15,11 @@
 static OW_TimerData _timerDataConfig;
 static OW_TriggerConfig _triggerConfig;
 
+
+static void OW_TIM3_Init(void);
+static void OW_TIM3_DeInit(void);
+
+
 static void updateTimerDataFromPeripheral(TIM_HandleTypeDef *htim, uint32_t channel)
 {
 	// Assuming you have the timer configuration and status
@@ -205,6 +210,10 @@ static void configureTimer(TIM_HandleTypeDef *timer, uint32_t channel, uint32_t 
 
 void init_trigger_pulse(TIM_HandleTypeDef* htim, uint32_t channel)
 {
+	if(!_triggerConfig.configured)
+	{
+		OW_TIM3_Init();
+	}
 	_triggerConfig.channel = channel;
 	_triggerConfig.htim = htim;
 	_triggerConfig.configured = true;
@@ -212,6 +221,16 @@ void init_trigger_pulse(TIM_HandleTypeDef* htim, uint32_t channel)
 	updateTimerDataFromPeripheral(htim, channel);
 }
 
+void deinit_trigger_pulse(TIM_HandleTypeDef* htim, uint32_t channel)
+{
+	if(_triggerConfig.configured)
+	{
+		// update with current settings setting configured to false
+		_triggerConfig.configured = false;
+		updateTimerDataFromPeripheral(htim, channel);
+		OW_TIM3_DeInit();
+	}
+}
 
 void get_trigger_data(char *jsonString, size_t max_length)
 {
@@ -228,15 +247,28 @@ void get_trigger_data(char *jsonString, size_t max_length)
 
 void stop_trigger_pulse()
 {
-	HAL_TIM_PWM_Stop(_triggerConfig.htim , _triggerConfig.channel);
-	updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
+	if(_triggerConfig.configured)
+	{
+		HAL_TIM_PWM_Stop(_triggerConfig.htim , _triggerConfig.channel);
+		updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
+		deinit_trigger_pulse(_triggerConfig.htim , _triggerConfig.channel);
+		_triggerConfig.configured = false;
+	}
 }
 
 
 void start_trigger_pulse()
 {
-	HAL_TIM_PWM_Start(_triggerConfig.htim , _triggerConfig.channel);
-	updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
+	if(_triggerConfig.configured)
+	{
+		HAL_TIM_PWM_Start(_triggerConfig.htim , _triggerConfig.channel);
+		updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
+	}else{
+		init_trigger_pulse(_triggerConfig.htim , _triggerConfig.channel);
+		configureTimer(_triggerConfig.htim, _triggerConfig.channel, _timerDataConfig.TriggerFrequencyHz, _timerDataConfig.TriggerPulseWidthUsec);
+		HAL_TIM_PWM_Start(_triggerConfig.htim , _triggerConfig.channel);
+		updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
+	}
 }
 
 bool set_trigger_data(char *jsonString, size_t str_len)
@@ -261,4 +293,118 @@ bool set_trigger_data(char *jsonString, size_t str_len)
 	}
 
 	return ret;
+}
+
+/**
+  * @brief TIM3 Deinitialization Function
+  * This function deinitializes the TIM3 used for PWM generation and
+  * reconfigures the associated GPIO pin to a standard output pin with a low state.
+  * @param None
+  * @retval None
+  */
+static void OW_TIM3_DeInit(void)
+{
+    /* USER CODE BEGIN TIM3_DeInit 0 */
+
+    /* USER CODE END TIM3_DeInit 0 */
+
+    /* 1. Stop the PWM generation on TIM3 Channel 3 */
+    if (HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* 2. Deinitialize the TIM3 peripheral */
+    if (HAL_TIM_PWM_DeInit(&htim3) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* 3. Deinitialize GPIO pin used for TIM3 Channel 3 (e.g., PB0) */
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_0);
+
+    /* 4. Reconfigure the GPIO pin as a general output pin */
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /* 5. Set the pin to low */
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+
+    /* USER CODE BEGIN TIM3_DeInit 1 */
+
+    /* USER CODE END TIM3_DeInit 1 */
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void OW_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 167;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 49999;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 24999;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* Configure GPIO pin for TIM3 CH3 */
+  __HAL_RCC_GPIOB_CLK_ENABLE();   // Enable GPIO Port B Clock
+  GPIO_InitStruct.Pin = GPIO_PIN_0;  // Configure PB0 as the pin for TIM3 CH3
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP; // Set to Alternate Function Push Pull Mode
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF2_TIM3; // Set alternate function to TIM3 (AF2 depending on MCU family)
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
+
 }

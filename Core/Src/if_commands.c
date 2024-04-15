@@ -20,7 +20,7 @@ static void process_afe_read_status(UartPacket *uartResp, UartPacket cmd);
 static void process_afe_read(UartPacket *uartResp, UartPacket cmd);
 
 static char retTriggerJson[0xFF];
-static uint8_t FIRMWARE_VERSION_DATA[3] = {0, 1, 1};
+extern uint8_t FIRMWARE_VERSION_DATA[3];
 static uint32_t id_words[3] = {0};
 uint8_t receive_afe_status[I2C_STATUS_SIZE] = {0};
 uint8_t receive_afe_buff[I2C_BUFFER_SIZE] = {0};
@@ -105,14 +105,14 @@ static void process_afe_send(UartPacket *uartResp, UartPacket cmd)
 
 	send_len = i2c_packet_toBuffer(&send_afe_packet, send_afe_buff);
 	send_buffer_to_slave(slave_addr, send_afe_buff, send_len);
-	HAL_Delay(5);
+	HAL_Delay(2);
 	process_afe_read_status(uartResp, cmd);
 }
 
 static void process_afe_read(UartPacket *uartResp, UartPacket cmd)
 {
 	uint16_t rx_len =  cmd.command;
-	I2C_TX_Packet afe_data_packet;
+	// I2C_TX_Packet afe_data_packet;
 	uint8_t slave_addr = cmd.addr;
 	if(found_address_count == 0){
 		printf("No AFE's found\r\n");
