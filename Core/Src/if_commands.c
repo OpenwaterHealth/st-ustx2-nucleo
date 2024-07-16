@@ -212,7 +212,7 @@ static void CONTROLLER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
 			uartResp->command = cmd.command;
 			uartResp->addr = cmd.addr;
 			uartResp->reserved = cmd.reserved;
-			found_address_count = I2C_scan(found_addresses, MAX_FOUND_ADDRESSES, false);
+			found_address_count = I2C_scan(found_addresses, MAX_FOUND_ADDRESSES, true);
 			uartResp->data_len = found_address_count;
 			uartResp->data = found_addresses;
 			break;

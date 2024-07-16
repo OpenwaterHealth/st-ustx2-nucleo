@@ -15,13 +15,13 @@
 #define I2C_DEVICE hi2c1
 
 uint8_t I2C_scan(uint8_t* addr_list, size_t list_size, bool display) {
-
+	printf("I2C SCAN \r\n\r\n");
 	uint8_t found = 0;
 
     // Iterate through all possible 7-bit addresses
     for (uint8_t address = 0x00; address <= 0x7F; address++) {
         HAL_StatusTypeDef status;
-        status = HAL_I2C_IsDeviceReady(&I2C_DEVICE, address << 1, 2, 200); // Address shift left by 1 for read/write bit
+        status = HAL_I2C_IsDeviceReady(&I2C_DEVICE, address << 1, 2, 10); // Address shift left by 1 for read/write bit
         if (status == HAL_OK) {
         	if(addr_list != NULL && found < list_size) {
         		addr_list[found] = address;
