@@ -12,13 +12,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-static OW_TimerData _timerDataConfig;
-static OW_TriggerConfig _triggerConfig;
-
+extern OW_TimerData _timerDataConfig;
+extern OW_TriggerConfig _triggerConfig;
 
 static void OW_TIM3_Init(void);
 static void OW_TIM3_DeInit(void);
-
 
 static void updateTimerDataFromPeripheral(TIM_HandleTypeDef *htim, uint32_t channel)
 {
@@ -31,9 +29,9 @@ static void updateTimerDataFromPeripheral(TIM_HandleTypeDef *htim, uint32_t chan
 	_timerDataConfig.TriggerPulseCount = 0;
 	_timerDataConfig.TriggerFrequencyHz = timerClockFrequency / (TIM_ARR + 1);
 
-	uint32_t pulseWidthUs = (TIM_CCRx * 1000000) / timerClockFrequency;
+	uint32_t pulseWidthUs = (TIM_CCRx * 100000) / timerClockFrequency;
 
-	_timerDataConfig.TriggerPulseWidthUsec = pulseWidthUs; // Set the pulse width as needed
+	_timerDataConfig.TriggerPulseWidthUsec = pulseWidthUs * 10; // Set the pulse width as needed
 
 	// Check the timer status to determine if it's running
 	_timerDataConfig.TriggerStatus = TIM_CHANNEL_STATE_GET(htim, channel);
@@ -54,21 +52,6 @@ static void timerDataToJson(char *jsonString, size_t max_length)
 			 _timerDataConfig.TriggerFrequencyHz, _timerDataConfig.TriggerMode > 0 ? "PULSECOUNT" : "CONTINUOUS",
 			 _timerDataConfig.TriggerPulseCount, _timerDataConfig.TriggerPulseWidthUsec,
 			 _timerDataConfig.TriggerStatus == HAL_TIM_CHANNEL_STATE_BUSY ? "RUNNING" : "STOPPED");
-}
-
-static void errorToJson(char *jsonString, size_t max_length)
-{
-	memset(jsonString, 0, max_length);
-	snprintf(jsonString, max_length,
-			 "{"
-			 "\"TriggerFrequencyHz\": 0,"
-			 "\"TriggerMode\": \"%s\","
-			 "\"TriggerPulseCount\": 0,"
-			 "\"TriggerPulseWidthUsec\": 0,"
-			 "\"TriggerStatus\": \"%s\""
-			 "}",
-			 "UNKNOWN",
-			 "NOT CONFIGURED");
 }
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
@@ -128,11 +111,6 @@ static int jsonToTimerData(const char *jsonString)
 
 	}
 
-    if ((1000000 / _timerDataConfig.TriggerFrequencyHz) <= _timerDataConfig.TriggerPulseWidthUsec)
-    {
-        // invalid pulsewidth
-        return 1;
-    }
     return 0; // Successful parsing
 }
 
@@ -176,13 +154,14 @@ static int jsonToTimerData(const char *jsonString)
 }
 #endif
 
-// Function to configure htim3 based on triggerFrequency and triggerPulseWidthUsec
+// Function to configure htim4 based on triggerFrequency and triggerPulseWidthUsec
 static void configureTimer(TIM_HandleTypeDef *timer, uint32_t channel, uint32_t triggerFrequency, uint32_t triggerPulseWidthUsec)
 {
 	TIM_OC_InitTypeDef sConfigOC = {0};
-	uint32_t period = ((1000000/triggerFrequency)/2) - 1;
+	uint32_t period = (100000/triggerFrequency) - 1;
+	uint32_t pulse = 25;
 
-	timer->Init.Prescaler = 167;
+	timer->Init.Prescaler = 839;
 	timer->Init.CounterMode = TIM_COUNTERMODE_UP;
 	timer->Init.Period = period;
 	timer->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -195,7 +174,7 @@ static void configureTimer(TIM_HandleTypeDef *timer, uint32_t channel, uint32_t 
 	}
 
 	sConfigOC.OCMode = TIM_OCMODE_PWM1;
-	sConfigOC.Pulse = triggerPulseWidthUsec/2;
+	sConfigOC.Pulse = pulse;
 	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
 	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
 
@@ -226,23 +205,16 @@ void deinit_trigger_pulse(TIM_HandleTypeDef* htim, uint32_t channel)
 	if(_triggerConfig.configured)
 	{
 		// update with current settings setting configured to false
-		_triggerConfig.configured = false;
 		updateTimerDataFromPeripheral(htim, channel);
 		OW_TIM3_DeInit();
+		_triggerConfig.configured = false;
 	}
 }
 
 void get_trigger_data(char *jsonString, size_t max_length)
 {
-	if(_triggerConfig.configured)
-	{
-		updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
-		timerDataToJson(jsonString, max_length);
-	}
-	else
-	{
-		errorToJson(jsonString, max_length);
-	}
+	updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
+	timerDataToJson(jsonString, max_length);
 }
 
 void stop_trigger_pulse()
@@ -252,7 +224,6 @@ void stop_trigger_pulse()
 		HAL_TIM_PWM_Stop(_triggerConfig.htim , _triggerConfig.channel);
 		updateTimerDataFromPeripheral(_triggerConfig.htim , _triggerConfig.channel);
 		deinit_trigger_pulse(_triggerConfig.htim , _triggerConfig.channel);
-		_triggerConfig.configured = false;
 	}
 }
 
@@ -350,6 +321,11 @@ static void OW_TIM3_Init(void)
   /* USER CODE BEGIN TIM3_Init 0 */
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
+  // Calculate the period for the given frequency
+  uint32_t period = (100000 / _timerDataConfig.TriggerFrequencyHz) - 1;
+
+  // Calculate the pulse width in timer ticks (since the timer runs at 100000 KHz)
+  uint32_t pulse = 25;
 
   /* USER CODE END TIM3_Init 0 */
 
@@ -361,9 +337,9 @@ static void OW_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 167;
+  htim3.Init.Prescaler = 839;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 49999;
+  htim3.Init.Period = period;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -386,7 +362,7 @@ static void OW_TIM3_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 24999;
+  sConfigOC.Pulse = pulse;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)

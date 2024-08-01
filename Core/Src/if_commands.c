@@ -249,6 +249,15 @@ static void CONTROLLER_ProcessCommand(UartPacket *uartResp, UartPacket cmd)
 			uartResp->data_len = strlen(retTriggerJson);
 			uartResp->data = (uint8_t *)retTriggerJson;
 			break;
+		case OW_CTRL_SET_HV:
+			// refresh state
+			get_trigger_data(retTriggerJson, 0xFF);
+			uartResp->command = cmd.command;
+			uartResp->addr = cmd.addr;
+			uartResp->reserved = cmd.reserved;
+			uartResp->data_len = strlen(retTriggerJson);
+			uartResp->data = (uint8_t *)retTriggerJson;
+			break;
 		case OW_CMD_RESET:
 			uartResp->command = cmd.command;
 			uartResp->addr = cmd.addr;

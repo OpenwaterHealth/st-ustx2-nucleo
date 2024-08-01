@@ -94,9 +94,6 @@ extern I2C_HandleTypeDef hi2c1;
 #define BUS0_spi1_mosi_GPIO_Port GPIOA
 #define nRST_SLV_Pin GPIO_PIN_4
 #define nRST_SLV_GPIO_Port GPIOC
-#define nESTOP_Pin GPIO_PIN_5
-#define nESTOP_GPIO_Port GPIOC
-#define nESTOP_EXTI_IRQn EXTI9_5_IRQn
 #define Trigger_Pin GPIO_PIN_0
 #define Trigger_GPIO_Port GPIOB
 #define BUS0_cs0_Pin GPIO_PIN_12
@@ -107,11 +104,10 @@ extern I2C_HandleTypeDef hi2c1;
 #define BUS0_cs2_GPIO_Port GPIOB
 #define BUS0_cs3_Pin GPIO_PIN_15
 #define BUS0_cs3_GPIO_Port GPIOB
-#define READY_Pin GPIO_PIN_6
-#define READY_GPIO_Port GPIOC
-#define READY_EXTI_IRQn EXTI9_5_IRQn
-#define BUS0_bit7_Pin GPIO_PIN_7
-#define BUS0_bit7_GPIO_Port GPIOC
+#define VAR_SUPP_PWM_Pin GPIO_PIN_6
+#define VAR_SUPP_PWM_GPIO_Port GPIOC
+#define VAR_SUPP_OFF_Pin GPIO_PIN_7
+#define VAR_SUPP_OFF_GPIO_Port GPIOC
 #define nINTERRUPT_Pin GPIO_PIN_9
 #define nINTERRUPT_GPIO_Port GPIOC
 #define nINTERRUPT_EXTI_IRQn EXTI9_5_IRQn
@@ -125,10 +121,9 @@ extern I2C_HandleTypeDef hi2c1;
 #define BUS0_uart3_rx_GPIO_Port GPIOC
 #define BUS0_spi1_ck_Pin GPIO_PIN_3
 #define BUS0_spi1_ck_GPIO_Port GPIOB
-#define BUS0_timch1_Pin GPIO_PIN_6
-#define BUS0_timch1_GPIO_Port GPIOB
-#define BUS0_timch2_Pin GPIO_PIN_7
-#define BUS0_timch2_GPIO_Port GPIOB
+#define GLOBAL_RDY_Pin GPIO_PIN_5
+#define GLOBAL_RDY_GPIO_Port GPIOB
+#define GLOBAL_RDY_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 // #define DEBUG_COMMS
